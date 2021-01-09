@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/gorilla/websocket"
@@ -37,11 +40,17 @@ func registerHTTPHandlers() {
 	registerUserRoutes(r.PathPrefix("/user").Subrouter())
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/static")))
-	http.Handle("/", r)
+
+	loggedRouter := handlers.RecoveryHandler()(handlers.LoggingHandler(os.Stdout, r))
+	http.Handle("/", loggedRouter)
 }
 
 func registerUserRoutes(router *mux.Router) *mux.Router {
-	//router.Methods("POST").HandlerFunc(createUser)
+	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(createUser), "application/json"))
+	router.Path("/{userID}/").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userDir")
+
+	return router
+
 	// router.HandleFunc("/{userID}/", func(w http.ResponseWriter, r *http.Request) {
 	// 	vars := mux.Vars(r)
 	// 	logger.Info.Println("In user", vars["userID"])
@@ -51,14 +60,45 @@ func registerUserRoutes(router *mux.Router) *mux.Router {
 	// 	vars := mux.Vars(r)
 	// 	logger.Info.Println("In user", vars["userID"])
 	// })
-	router.Path("/{userID}/").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).
-		Name("userDir")
+}
 
-	return router
+type UNPW struct {
+	User     string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (unpw UNPW) String() string {
+	return fmt.Sprintf("User: %s, Password: %s", unpw.User, unpw.Password)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
 	logger.Info.Println("Should handle POST")
+	defer r.Body.Close()
+	var unpw UNPW
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&unpw); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	logger.Info.Println(unpw)
+}
+
+// respondJSON makes the response with payload as json format
+func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(response)
+}
+
+// respondError makes the error response with payload as json format
+func respondError(w http.ResponseWriter, code int, message string) {
+	respondJSON(w, code, map[string]string{"error": message})
 }
 
 //http.Handle("/", http.FileServer(http.Dir("./web/static")))

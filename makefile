@@ -26,3 +26,11 @@ copy_configs: configs
 copy_web: web
 	mkdir -p ./build/web
 	cp -r ./web/ ./build/web/ || :
+
+.PHONY: requestNewUser
+requestNewUser:
+	curl --request POST \
+		-X POST \
+		--header "Content-Type: application/json" \
+	  	--data '{"username":"xyz","password":"xyz"}' \
+		localhost:8282/user

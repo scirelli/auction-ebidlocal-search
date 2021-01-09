@@ -8,7 +8,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 )
 
-func main() {
+func main1() {
 	t, err := template.New("template.html.tmpl").Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
