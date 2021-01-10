@@ -27,5 +27,7 @@ func Load(fileName string) (*Config, error) {
 }
 
 type Config struct {
-	UserDir string `json:"userDir"`
+	UserDir      string `json:"userDir"`
+	TemplateDir  string `json:"templateDir"`
+	DataFileName string `json:"dataFileName"`
 }

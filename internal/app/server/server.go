@@ -99,8 +99,13 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.logger.Info.Println(user)
-	respondJSON(w, http.StatusCreated, user)
+	userName, err := s.ebidlocal.CreateUser(user.UserName)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Could not create user")
+		return
+	}
+	s.logger.Info.Println(userName)
+	respondJSON(w, http.StatusCreated, userName)
 }
 
 // respondJSON makes the response with payload as json format

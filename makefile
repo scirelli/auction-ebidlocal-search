@@ -24,8 +24,9 @@ copy_configs: configs
 	@cp -r ./configs/*.json ./build/configs/ || :
 
 copy_web: web
-	@mkdir -p ./build/web
-	@cp -r ./web/ ./build/web/ || :
+	@mkdir -p ./build/web/user
+	@mkdir -p ./build/template
+	@cp -r ./web/user/ ./build/template/
 
 .PHONY: requestNewUser
 requestNewUser:
