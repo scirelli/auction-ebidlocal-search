@@ -1,43 +1,53 @@
-package main
+package server
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
-	"github.com/gorilla/websocket"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-var addr = flag.String("addr", "localhost:8282", "http service address")
-var logger = log.New("Server")
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+func New(config Config, ebidlocal *ebidlocal.Ebidlocal) *Server {
+	var server = Server{
+		config:    config,
+		logger:    log.New("Server"),
+		ebidlocal: ebidlocal,
+	}
+
+	if url, err := url.Parse(fmt.Sprintf("%s:%d", config.Address, config.Port)); err != nil {
+		server.logger.Error.Fatalln(err)
+	} else {
+		server.addr = url
+	}
+
+	server.registerHTTPHandlers()
+
+	return &server
 }
 
-func main() {
-	configPath := flag.String("config-path", os.Getenv("EBIDLOCAL_CONFIG"), "path to the config file.")
-	logger.Info.Println(configPath)
-	flag.Parse()
-
-	registerHTTPHandlers()
-
-	logger.Info.Println("Listening on http://" + *addr)
-	logger.Error.Fatal(http.ListenAndServe(*addr, nil))
+type Server struct {
+	logger    *log.Logger
+	addr      *url.URL
+	ebidlocal *ebidlocal.Ebidlocal
+	config    Config
 }
 
-func registerHTTPHandlers() {
+func (s *Server) Run() {
+	s.logger.Info.Printf("Listening on %s\n", s.addr.String())
+	s.logger.Error.Fatal(http.ListenAndServe(s.addr.String(), nil))
+}
+
+func (s *Server) registerHTTPHandlers() {
 	r := mux.NewRouter()
 
-	registerUserRoutes(r.PathPrefix("/user").Subrouter())
+	s.registerUserRoutes(r.PathPrefix("/user").Subrouter())
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/static")))
 
@@ -45,8 +55,8 @@ func registerHTTPHandlers() {
 	http.Handle("/", loggedRouter)
 }
 
-func registerUserRoutes(router *mux.Router) *mux.Router {
-	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(createUser), "application/json"))
+func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
+	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUser), "application/json"))
 	router.Path("/{userID}/").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userDir")
 
 	return router
@@ -62,25 +72,35 @@ func registerUserRoutes(router *mux.Router) *mux.Router {
 	// })
 }
 
-type UNPW struct {
-	User     string `json:"username"`
-	Password string `json:"password"`
+//User user data.
+type User struct {
+	UserName string `json:"username"`
 }
 
-func (unpw UNPW) String() string {
-	return fmt.Sprintf("User: %s, Password: %s", unpw.User, unpw.Password)
+func (u User) String() string {
+	return fmt.Sprintf("User name: '%s'", u.UserName)
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
-	logger.Info.Println("Should handle POST")
+//IsValid validate user data.
+func (u User) IsValid() bool {
+	return u.UserName != ""
+}
+
+func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var unpw UNPW
+	var user User
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&unpw); err != nil {
+	if err := decoder.Decode(&user); err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	logger.Info.Println(unpw)
+	if !user.IsValid() {
+		respondError(w, http.StatusBadRequest, "User name is required.")
+		return
+	}
+
+	s.logger.Info.Println(user)
+	respondJSON(w, http.StatusCreated, user)
 }
 
 // respondJSON makes the response with payload as json format

@@ -1,0 +1,9 @@
+{
+    "server": {
+        "port": 8282,
+        "address": "localhost"
+    },
+    "ebidclocal": {
+        "userDir": "./web/user/"
+    }
+}
