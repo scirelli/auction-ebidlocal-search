@@ -4,8 +4,6 @@
         "address": "localhost"
     },
     "ebidclocal": {
-        "userDir": "./web/user/",
-        "templateDir": "./template",
-        "dataFileName": "data.json"
+        "contentDir": ""
     }
 }

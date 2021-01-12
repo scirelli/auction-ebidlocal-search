@@ -57,33 +57,17 @@ func (s *Server) registerHTTPHandlers() {
 
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUser), "application/json"))
-	router.Path("/{userID}/").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userDir")
+
+	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userData")
+
+	router.PathPrefix("/{userID}/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := mux.Vars(r)["userID"]
+		d := fmt.Sprintf("./web/user/%s/static", userID)
+		rm := fmt.Sprintf("/user/%s/", userID)
+		http.StripPrefix(rm, http.FileServer(http.Dir(d))).ServeHTTP(w, r)
+	})).Name("userDir")
 
 	return router
-
-	// router.HandleFunc("/{userID}/", func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	logger.Info.Println("In user", vars["userID"])
-	// })
-
-	// router.Path("/{userID}/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	vars := mux.Vars(r)
-	// 	logger.Info.Println("In user", vars["userID"])
-	// })
-}
-
-//User user data.
-type User struct {
-	UserName string `json:"username"`
-}
-
-func (u User) String() string {
-	return fmt.Sprintf("User name: '%s'", u.UserName)
-}
-
-//IsValid validate user data.
-func (u User) IsValid() bool {
-	return u.UserName != ""
 }
 
 func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +89,11 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Info.Println(userName)
-	respondJSON(w, http.StatusCreated, userName)
+
+	w.Header().Set("Location", fmt.Sprintf("/user/%s/static", url.PathEscape(userName)))
+	respondJSON(w, http.StatusCreated, struct {
+		UserName string `json:"username"`
+	}{UserName: userName})
 }
 
 // respondJSON makes the response with payload as json format
@@ -125,32 +113,3 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 func respondError(w http.ResponseWriter, code int, message string) {
 	respondJSON(w, code, map[string]string{"error": message})
 }
-
-//http.Handle("/", http.FileServer(http.Dir("./web/static")))
-// r.HandleFunc("/", HomeHandler)
-// r.HandleFunc("/products", ProductsHandler)
-// r.HandleFunc("/articles", ArticlesHandler)
-// r.HandleFunc("/products/{key}", ProductHandler)
-// r.HandleFunc("/articles/{category}/", ArticlesCategoryHandler)
-// r.HandleFunc("/articles/{category}/{id:[0-9]+}", ArticleHandler)
-
-// http.HandleFunc("/forcegraph", func(w http.ResponseWriter, r *http.Request) {
-// 	session, _ := store.Get(r, "uid")
-// 	if _, ok := session.Values["username"]; !ok {
-// 		session.Values["username"] = "No Name"
-// 	}
-
-// 	err := session.Save(r, w)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	conn, err := upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		logger.Error.Println(err)
-// 		return
-// 	}
-
-// 	graph.RegisterConnection(conn, session.ID, session.Values["username"].(string))
-// })

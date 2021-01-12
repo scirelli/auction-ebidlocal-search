@@ -13,7 +13,8 @@ runEbid: ebidlocal
 	@./build/ebidlocal | tee /tmp/index.html | md5 | tee /tmp/index.html.md5 
 
 run: ./build/server
-	@./build/server --config-path=$(shell pwd)/build/configs/config.json
+	@cd ./build && \
+	./server --config-path=$(shell pwd)/build/configs/config.json
 
 .PHONY: clean
 clean:
@@ -25,8 +26,8 @@ copy_configs: configs
 
 copy_web: web
 	@mkdir -p ./build/web/user
-	@mkdir -p ./build/template
-	@cp -r ./web/user/ ./build/template/
+	@cp -r ./web/user_templates/ ./build/template/
+	@cp -r ./web/static/ ./build/web/static
 
 .PHONY: requestNewUser
 requestNewUser:
@@ -36,3 +37,7 @@ requestNewUser:
 	  	--data '{"username":"xyz"}' \
 		localhost:8282/user
 	@echo ''
+
+.PHONY: test
+test:
+	@go test ./...

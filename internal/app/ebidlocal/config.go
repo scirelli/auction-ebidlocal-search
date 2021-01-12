@@ -26,8 +26,11 @@ func Load(fileName string) (*Config, error) {
 	return &config, nil
 }
 
+//Config for ebidlocal app
 type Config struct {
-	UserDir      string `json:"userDir"`
-	TemplateDir  string `json:"templateDir"`
-	DataFileName string `json:"dataFileName"`
+	ContentPath      string `json:"contentDir"`
+	UserDir          string `json:"userDir"`
+	TemplateDir      string `json:"templateDir"`
+	DataFileName     string `json:"dataFileName"`
+	WatchlistDirName string `json:watchlistDirName"`
 }

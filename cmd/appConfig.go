@@ -29,6 +29,7 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 	return &config, nil
 }
 
+//AppConfig configuration data for entire application.
 type AppConfig struct {
 	Server    server.Config    `json:"server"`
 	Ebidlocal ebidlocal.Config `json:"ebidlocal"`
