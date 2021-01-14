@@ -26,6 +26,7 @@ copy_configs: configs
 
 copy_web: web
 	@mkdir -p ./build/web/user
+	@mkdir -p ./build/web/watchlists
 	@cp -r ./web/user_templates/ ./build/template/
 	@cp -r ./web/static/ ./build/web/static
 
@@ -33,11 +34,21 @@ copy_web: web
 requestNewUser:
 	curl --request POST \
 		--include \
+		--location \
 		--header "Content-Type: application/json" \
-	  	--data '{"username":"xyz"}' \
+	  	--data '{"name":"xyz"}' \
 		localhost:8282/user
 	@echo ''
 
+.PHONY: requestNewWatchlist
+requestNewWatchlist:
+	curl --request POST \
+		--include \
+		--location \
+		--header "Content-Type: application/json" \
+	  	--data '{"name":"xyz"}' \
+		localhost:8282/user/$$EBID_USER/watchlist
+	@echo ''
 .PHONY: test
 test:
 	@go test ./...

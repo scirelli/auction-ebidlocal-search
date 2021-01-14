@@ -22,8 +22,9 @@ type User struct {
 func NewUser(username string) User {
 	id, _ := generateID()
 	return User{
-		Username: username,
-		ID:       id,
+		Username:   username,
+		ID:         id,
+		Watchlists: make(map[string][]string),
 	}
 }
 

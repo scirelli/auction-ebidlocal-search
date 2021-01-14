@@ -9,12 +9,21 @@ import (
 type Watchlist []string
 
 func (w Watchlist) ID() string {
-	sort.Sort(w)
+	w.Normalize()
 	h := sha1.New()
 	for _, s := range w {
-		h.Write([]byte(strings.ToLower(s)))
+		h.Write([]byte(s))
 	}
 	return strings.ToUpper(string(h.Sum(nil)))
+}
+
+func (w Watchlist) Normalize() Watchlist {
+	for i, s := range w {
+		w[i] = strings.ToLower(s)
+	}
+	sort.Sort(w)
+
+	return w
 }
 
 // Len is the number of elements in the collection.

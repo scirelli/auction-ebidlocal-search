@@ -56,6 +56,7 @@ func (s *Server) registerHTTPHandlers() {
 }
 
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
+	router.Path("/{userID}/watchlist").Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createWatchlist), "application/json")).Name("createWatchlist")
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUser), "application/json"))
 
 	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userData")
@@ -73,8 +74,9 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var user User
+	var err error
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&user); err != nil {
+	if err = decoder.Decode(&user); err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -83,17 +85,20 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userName, err := s.ebidlocal.CreateUser(user.UserName)
+	user.ID, err = s.ebidlocal.CreateUser(user.Name)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Could not create user")
 		return
 	}
-	s.logger.Info.Println(userName)
+	s.logger.Info.Println(user.ID)
 
-	w.Header().Set("Location", fmt.Sprintf("/user/%s/static", url.PathEscape(userName)))
-	respondJSON(w, http.StatusCreated, struct {
-		UserName string `json:"username"`
-	}{UserName: userName})
+	w.Header().Set("Location", fmt.Sprintf("/user/%s/", url.PathEscape(user.ID)))
+	respondJSON(w, http.StatusCreated, user)
+}
+
+func (s *Server) createWatchlist(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userID"]
+	s.logger.Info.Printf("Create watch list called '%s'", userID)
 }
 
 // respondJSON makes the response with payload as json format
