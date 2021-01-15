@@ -48,6 +48,7 @@ func (s *Server) registerHTTPHandlers() {
 	r := mux.NewRouter()
 
 	s.registerUserRoutes(r.PathPrefix("/user").Subrouter())
+	s.registerWatchlistRoutes(r.PathPrefix("/watchlist").Subrouter())
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/static")))
 
@@ -56,10 +57,21 @@ func (s *Server) registerHTTPHandlers() {
 }
 
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
-	router.Path("/{userID}/watchlist").Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createWatchlist), "application/json")).Name("createWatchlist")
+	router.Path("/{userID}/watchlist").Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlist), "application/json")).Name("createWatchlist")
+
+	router.Path("/{userID}/watchlist/{listID}").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		userID := params["userID"]
+		listID := params["listID"]
+
+		d := fmt.Sprintf("./web/watchlists/%s/", listID)
+		rm := fmt.Sprintf("/user/%s/watchlist/%s", userID, listID)
+		http.StripPrefix(rm, http.FileServer(http.Dir(d))).ServeHTTP(w, r)
+	})).Name("getUserWatchlist")
+
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUser), "application/json"))
 
-	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user/", http.FileServer(http.Dir("./web/user")))).Name("userData")
+	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user", http.FileServer(http.Dir("./web/user")))).Name("userData")
 
 	router.PathPrefix("/{userID}/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := mux.Vars(r)["userID"]
@@ -96,9 +108,38 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, user)
 }
 
-func (s *Server) createWatchlist(w http.ResponseWriter, r *http.Request) {
+func (s *Server) createUserWatchlist(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["userID"]
-	s.logger.Info.Printf("Create watch list called '%s'", userID)
+
+	defer r.Body.Close()
+	var wl Watchlist
+	var err error
+	decoder := json.NewDecoder(r.Body)
+	if err = decoder.Decode(&wl); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if !wl.IsValid() {
+		respondError(w, http.StatusBadRequest, "User watchlist is required.")
+		return
+	}
+
+	listID, err := s.ebidlocal.AddUserWatchlist(userID, wl.Name, wl.List)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create watch list")
+		return
+	}
+
+	s.logger.Info.Printf("Create watch list called '%s'", wl.Name)
+	w.Header().Set("Location", fmt.Sprintf("/user/%s/watchlist/%s", url.PathEscape(userID), url.PathEscape(listID)))
+	respondJSON(w, http.StatusCreated, struct {
+		WatchlistID string `json:"watchlistID"`
+	}{WatchlistID: listID})
+}
+
+func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
+	router.Methods("GET").Handler(http.StripPrefix("/watchlist", http.FileServer(http.Dir("./web/watchlists"))))
+	return router
 }
 
 // respondJSON makes the response with payload as json format

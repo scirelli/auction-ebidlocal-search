@@ -13,10 +13,10 @@ import (
 var defaultIDGen = generator.NewAutoInc(0, 1)
 
 type User struct {
-	Username   string              `json:"userName"`
-	ID         string              `json:"userID"`
-	UserDir    string              `json:"userDir"`
-	Watchlists map[string][]string `json:"watchlists"`
+	Username   string            `json:"userName"`
+	ID         string            `json:"userID"`
+	UserDir    string            `json:"userDir"`
+	Watchlists map[string]string `json:"watchlists"`
 }
 
 func NewUser(username string) User {
@@ -24,7 +24,7 @@ func NewUser(username string) User {
 	return User{
 		Username:   username,
 		ID:         id,
-		Watchlists: make(map[string][]string),
+		Watchlists: make(map[string]string),
 	}
 }
 

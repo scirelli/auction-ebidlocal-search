@@ -2,6 +2,7 @@ package ebidlocal
 
 import (
 	"crypto/sha1"
+	b64 "encoding/base64"
 	"sort"
 	"strings"
 )
@@ -14,7 +15,7 @@ func (w Watchlist) ID() string {
 	for _, s := range w {
 		h.Write([]byte(s))
 	}
-	return strings.ToUpper(string(h.Sum(nil)))
+	return b64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (w Watchlist) Normalize() Watchlist {

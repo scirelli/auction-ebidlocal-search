@@ -32,5 +32,6 @@ type Config struct {
 	UserDir          string `json:"userDir"`
 	TemplateDir      string `json:"templateDir"`
 	DataFileName     string `json:"dataFileName"`
-	WatchlistDirName string `json:watchlistDirName"`
+	WatchlistDirName string `json:"watchlistDirName"`
+	ScanIncrement    int64  `json:"scanIncrement"`
 }

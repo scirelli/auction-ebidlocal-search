@@ -2,6 +2,8 @@ package ebidlocal
 
 import (
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,26 +26,56 @@ func New(config Config) *Ebidlocal {
 	if config.WatchlistDirName == "" {
 		config.WatchlistDirName = "watchlists"
 	}
+	if config.ScanIncrement == 0 {
+		config.ScanIncrement = 1
+	}
+
+	t, err := template.New("watchlist").Funcs(template.FuncMap{
+		"htmlSafe": func(html string) template.HTML {
+			return template.HTML(html)
+		},
+	}).ParseFiles(filepath.Join("./", "assets", "templates", "template.html.tmpl"))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &Ebidlocal{
-		config: config,
-		logger: log.New("Ebidlocal"),
+		config:   config,
+		logger:   log.New("Ebidlocal"),
+		template: t,
 	}
 }
 
 //Ebidlocal data for ebidlocal app
 type Ebidlocal struct {
-	config Config
-	logger *log.Logger
+	config   Config
+	logger   *log.Logger
+	template *template.Template
 }
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
 func (e *Ebidlocal) Scan(done <-chan struct{}) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(time.Duration(e.config.ScanIncrement) * time.Minute)
+	watchlistDir := filepath.Join(e.config.ContentPath, "web", "watchlists")
+	e.logger.Info.Printf("Scanning '%s' at interval '%d'", watchlistDir, e.config.ScanIncrement)
 	for {
 		select {
 		case <-ticker.C:
-			e.logger.Info.Printf("Scanning '%s'", filepath.Join(e.config.ContentPath, e.config.UserDir, "watchlists"))
+			err := filepath.Walk(watchlistDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					fmt.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
+					return err
+				}
+				if info.Name() == "data.json" {
+					fmt.Printf("Found file: %q\n", path)
+				}
+
+				return nil
+			})
+			if err != nil {
+				fmt.Printf("error walking the path %q: %v\n", watchlistDir, err)
+				return
+			}
 		case <-done:
 			ticker.Stop()
 			return
@@ -68,13 +100,18 @@ func (e *Ebidlocal) CreateUser(username string) (string, error) {
 }
 
 //AddUserWatchlist add a watch list to a user's group of watch lists.
-func (e *Ebidlocal) AddUserWatchlist(userID string, watchlistName string, list Watchlist) error {
+func (e *Ebidlocal) AddUserWatchlist(userID string, watchlistName string, list Watchlist) (string, error) {
 	user, err := e.loadUser(userID)
 	if err != nil {
-		return err
+		return "", err
 	}
-	user.Watchlists[watchlistName] = list
-	return e.saveUser(user)
+	if err := e.addWatchlist(list); err != nil {
+		return "", err
+	}
+
+	listID := list.ID()
+	user.Watchlists[watchlistName] = listID
+	return listID, e.saveUser(user)
 }
 
 func (e *Ebidlocal) createUserSpace(u *User) (string, error) {
@@ -99,12 +136,11 @@ func (e *Ebidlocal) createUserSpace(u *User) (string, error) {
 }
 
 func (e *Ebidlocal) saveUser(u *User) error {
-	file, err := json.MarshalIndent(u, "", "    ")
+	file, err := json.Marshal(u)
 	if err != nil {
 		e.logger.Error.Println(err)
 		return err
 	}
-	e.logger.Info.Printf("Writing user data.", file)
 	return ioutil.WriteFile(filepath.Join(u.UserDir, e.config.DataFileName), file, 0644)
 }
 
@@ -133,23 +169,28 @@ func (e *Ebidlocal) loadUser(userID string) (*User, error) {
 }
 
 func (e *Ebidlocal) addWatchlist(list Watchlist) error {
-	var watchlistDir = filepath.Join(e.config.ContentPath, "watchlists", list.ID())
+	var watchlistDir = filepath.Join(e.config.ContentPath, "web", "watchlists", list.ID())
 
 	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
 		e.logger.Info.Println("Watch list already exists.")
 		return nil
 	}
 
+	e.logger.Info.Printf("Creating watchlist.", watchlistDir)
 	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
 		e.logger.Error.Println(err)
 		return err
 	}
 
-	file, err := json.MarshalIndent(list, "", "    ")
+	file, err := json.Marshal(list)
 	if err != nil {
 		e.logger.Error.Println(err)
 		return err
 	}
 
 	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
+}
+
+func (e *Ebidlocal) updateWatchlist(keywords Keywords) {
+	e.template.Execute(os.Stdout, keywords.Search())
 }

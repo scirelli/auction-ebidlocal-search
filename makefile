@@ -1,6 +1,7 @@
 SHELL:=/usr/bin/env bash
+.EXPORT_ALL_VARIABLES:
 
-build: clean copy_configs copy_web ./build/server
+build: clean copy_configs copy_web copy_assets ./build/server
 	@echo 'Done'
 
 ebidlocal: cmd/example.go
@@ -30,15 +31,17 @@ copy_web: web
 	@cp -r ./web/user_templates/ ./build/template/
 	@cp -r ./web/static/ ./build/web/static
 
+copy_assets: assets
+	@cp -r ./assets ./build/
+
 .PHONY: requestNewUser
 requestNewUser:
-	curl --request POST \
-		--include \
+	@curl --request POST \
+		--silent \
 		--location \
 		--header "Content-Type: application/json" \
 	  	--data '{"name":"xyz"}' \
-		localhost:8282/user
-	@echo ''
+		localhost:8282/user | jq -r '.id'
 
 .PHONY: requestNewWatchlist
 requestNewWatchlist:
@@ -46,7 +49,7 @@ requestNewWatchlist:
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-	  	--data '{"name":"xyz"}' \
+		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 .PHONY: test

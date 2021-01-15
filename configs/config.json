@@ -3,7 +3,8 @@
         "port": 8282,
         "address": "localhost"
     },
-    "ebidclocal": {
-        "contentDir": ""
+    "ebidlocal": {
+        "contentDir": "",
+        "scanIncrement": 1
     }
 }
