@@ -49,7 +49,7 @@ requestNewWatchlist:
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom"]}' \
+		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 .PHONY: test

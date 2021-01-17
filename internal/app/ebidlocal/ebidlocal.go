@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -30,13 +32,13 @@ func New(config Config) *Ebidlocal {
 		config.ScanIncrement = 1
 	}
 
-	t, err := template.New("watchlist").Funcs(template.FuncMap{
+	t, err := template.New("template.html.tmpl").Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
 	}).ParseFiles(filepath.Join("./", "assets", "templates", "template.html.tmpl"))
 	if err != nil {
-		log.Fatal(err)
+		log.New("Ebidlocal.New").Error.Fatal(err)
 	}
 
 	return &Ebidlocal{
@@ -68,6 +70,12 @@ func (e *Ebidlocal) Scan(done <-chan struct{}) {
 				}
 				if info.Name() == "data.json" {
 					fmt.Printf("Found file: %q\n", path)
+					kw, err := e.loadWatchlist(path)
+					if err != nil {
+						e.logger.Error.Println(err)
+						return nil
+					}
+					e.updateWatchlist(kw, os.Stdout)
 				}
 
 				return nil
@@ -191,6 +199,28 @@ func (e *Ebidlocal) addWatchlist(list Watchlist) error {
 	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
 }
 
-func (e *Ebidlocal) updateWatchlist(keywords Keywords) {
-	e.template.Execute(os.Stdout, keywords.Search())
+func (e *Ebidlocal) loadWatchlist(filePath string) (ebidlocal.Keywords, error) {
+	var keywords ebidlocal.Keywords = make([]string, 0)
+
+	jsonFile, err := os.Open(filePath)
+	if err != nil {
+		e.logger.Error.Println(err)
+		return keywords, err
+	}
+	dec := json.NewDecoder(jsonFile)
+	defer jsonFile.Close()
+	if err := dec.Decode(&keywords); err != nil {
+		e.logger.Error.Println(err)
+		return keywords, err
+	}
+	e.logger.Info.Printf("Watch list found '%v'", keywords)
+	return keywords, nil
+}
+
+func (e *Ebidlocal) updateWatchlist(keywords ebidlocal.Keywords, outFile io.Writer) error {
+	if err := e.template.Execute(outFile, keywords.Search()); err != nil {
+		e.logger.Error.Println(err)
+		return err
+	}
+	return nil
 }
