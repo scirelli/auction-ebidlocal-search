@@ -75,7 +75,12 @@ func (e *Ebidlocal) Scan(done <-chan struct{}) {
 						e.logger.Error.Println(err)
 						return nil
 					}
-					e.updateWatchlist(kw, os.Stdout)
+					if file, err := os.Create(filepath.Join(filepath.Dir(path), "index.html")); err == nil {
+						e.updateWatchlist(kw, file)
+						file.Close()
+					} else {
+						e.logger.Error.Println(err)
+					}
 				}
 
 				return nil

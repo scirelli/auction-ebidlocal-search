@@ -5,6 +5,6 @@
     },
     "ebidlocal": {
         "contentDir": "",
-        "scanIncrement": 1
+        "scanIncrement": 3
     }
 }
