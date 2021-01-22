@@ -29,4 +29,8 @@ func Load(fileName string) (*Config, error) {
 type Config struct {
 	Port    uint   `json:"port"`
 	Address string `json:"address"`
+
+	ContentPath  string `json:"contentPath"`
+	UserDir      string `json:"userDir"`
+	DataFileName string `json:"dataFileName"`
 }

@@ -1,18 +1,57 @@
 package server
 
-import "fmt"
+import (
+	b64 "encoding/base64"
+	"fmt"
+	"strconv"
+
+	"github.com/google/uuid"
+
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/generator"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
+)
+
+var defaultIDGen = generator.NewAutoInc(0, 1)
+
+func NewUser(username string) User {
+	id, _ := generateID()
+	return User{
+		Name:       username,
+		ID:         id,
+		Watchlists: make(map[string]string),
+	}
+}
 
 //User user data.
 type User struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
+	Name     string `json:"name"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Verified bool   `json:"verified"`
+
+	UserDir string `json:"userDir"`
+
+	//Wathclist names to ids
+	Watchlists map[string]string `json:"watchlists"`
 }
 
 func (u User) String() string {
-	return fmt.Sprintf("User name: '%s' (%s)", u.Name, u.ID)
+	return fmt.Sprintf("'%s' (%s) %s", u.Name, u.ID, u.UserDir)
 }
 
 //IsValid validate user data.
 func (u User) IsValid() bool {
 	return u.Name != ""
+}
+
+func generateID() (string, error) {
+	var userID = uuid.New()
+	bytes, err := userID.MarshalBinary()
+	if err != nil {
+		log.New("user").Error.Println(err)
+		id := strconv.Itoa(defaultIDGen.NewID())
+		return id, err
+	}
+
+	return b64.URLEncoding.EncodeToString(bytes), nil
 }

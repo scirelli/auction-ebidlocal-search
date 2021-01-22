@@ -1,4 +1,4 @@
-package ebidlocal
+package watchlist
 
 import (
 	"crypto/sha1"

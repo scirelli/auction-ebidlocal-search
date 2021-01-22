@@ -22,7 +22,7 @@ func main() {
 		logger.Error.Fatalln(err)
 	}
 	logger.Info.Printf("Cwd '%s'\n", cwd)
-	contentPath = flag.String("content-path", "./", fmt.Sprintf("Base path to save user and watchlist data. Default '%s'", "./"))
+	contentPath = flag.String("content-path", ".", fmt.Sprintf("Base path to save user and watchlist data. Default '%s'", "."))
 	flag.Parse()
 
 	logger.Info.Printf("config path '%s'\n", *configPath)
@@ -31,6 +31,7 @@ func main() {
 	}
 
 	appConfig.Ebidlocal.ContentPath = *contentPath
+	appConfig.Server.ContentPath = *contentPath
 	ebid := ebidlocal.New(appConfig.Ebidlocal)
 	doneChan := make(chan struct{})
 	go ebid.Scan(doneChan)

@@ -28,10 +28,11 @@ func Load(fileName string) (*Config, error) {
 
 //Config for ebidlocal app
 type Config struct {
-	ContentPath      string `json:"contentDir"`
-	UserDir          string `json:"userDir"`
-	TemplateDir      string `json:"templateDir"`
-	DataFileName     string `json:"dataFileName"`
-	WatchlistDirName string `json:"watchlistDirName"`
-	ScanIncrement    int64  `json:"scanIncrement"`
+	//ContentPath all config paths should be relative to the content path.
+	ContentPath   string `json:"contentPath"`
+	TemplateDir   string `json:"templateDir"`
+	DataFileName  string `json:"dataFileName"`
+	WatchlistDir  string `json:"watchlistDir"`
+	ScanInterval  int64  `json:"scanIntervalSeconds"`
+	AsyncRequests int64  `json:"asyncRequests"`
 }
