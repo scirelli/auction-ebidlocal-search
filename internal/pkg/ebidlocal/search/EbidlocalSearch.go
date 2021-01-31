@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+
+	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
 )
 
 const (
@@ -17,33 +20,19 @@ const (
 	requestDelay        = 1
 )
 
-//Searchable interface for searchable keywords.
-type Searchable interface {
-	Search() <-chan string
-}
-
-var openAuctions *AuctionsCache
-
-func init() {
-	openAuctions = NewAuctionsCache()
-}
-
-//SearchFunc func that implements the Search interface.
-type SearchFunc func() <-chan string
-
-func (s SearchFunc) Search() <-chan string {
-	return s()
-}
-
-func SearchAuctions(keywords []string, results chan string) {
+func SearchAuctions(keywordIter ebidLib.StringIterator, openAuctions ebidLib.StringIterator) (results chan string) {
 	var offset time.Duration
 	var wg sync.WaitGroup
-	var auctions []string = openAuctions.GetAuctions()
+	var keywords []string
 
-	log.Printf("All auctions '%v'", auctions)
+	results = make(chan string)
 
-	wg.Add(len(auctions))
-	for _, auction := range auctions {
+	for keyword, done := keywordIter.Next(); done; keyword, done = keywordIter.Next() {
+		keywords = append(keywords, keyword)
+	}
+
+	for auction, done := openAuctions.Next(); done; auction, done = openAuctions.Next() {
+		wg.Add(1)
 		go func(auction string, offset time.Duration) {
 			defer wg.Done()
 			time.Sleep(offset)
@@ -57,13 +46,15 @@ func SearchAuctions(keywords []string, results chan string) {
 		wg.Wait()
 		close(results)
 	}()
+
+	return results
 }
 
 func SearchAuction(auction string, keywords []string) (html string) {
 	var res *http.Response
 	var err error
 
-	res, err = client.PostForm(SearchURL, url.Values{
+	res, err = ebid.Client.PostForm(SearchURL, url.Values{
 		"auction": {auction},
 		"keyword": {strings.Join(keywords, " ")},
 		"stype":   {"ANY"},

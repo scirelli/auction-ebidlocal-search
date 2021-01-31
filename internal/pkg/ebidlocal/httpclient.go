@@ -6,13 +6,13 @@ import (
 )
 
 //HTTPClient client interface for making requests.
-type hTTPClient interface {
+type HTTPClient interface {
 	PostForm(url string, data url.Values) (resp *http.Response, err error)
 	Get(url string) (resp *http.Response, err error)
 }
 
-var client hTTPClient
+var Client HTTPClient
 
 func init() {
-	client = http.DefaultClient
+	Client = http.DefaultClient
 }

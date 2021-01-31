@@ -240,6 +240,7 @@ func (s *Server) addUserWatchlist(userID string, watchlistName string, list watc
 	if err := s.ebidlocal.AddWatchlist(list); err != nil {
 		return "", err
 	}
+	s.ebidlocal.EnqueueWatchlist(list)
 
 	listID := list.ID()
 	user.Watchlists[watchlistName] = listID

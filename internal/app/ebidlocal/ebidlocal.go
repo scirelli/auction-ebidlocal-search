@@ -10,7 +10,8 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
+	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -57,10 +58,16 @@ func New(config Config) *Ebidlocal {
 
 //Ebidlocal data for ebidlocal app
 type Ebidlocal struct {
-	config     Config
-	logger     *log.Logger
-	template   *template.Template
-	watchlists chan string
+	config       Config
+	logger       *log.Logger
+	template     *template.Template
+	watchlists   chan string
+	openAuctions ebidLib.StringGenerator
+}
+
+func (e *Ebidlocal) SetOpenAuctions(openAuctions ebidLib.StringGenerator) *Ebidlocal {
+	e.openAuctions = openAuctions
+	return e
 }
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
@@ -79,6 +86,38 @@ func (e *Ebidlocal) Scan(done <-chan struct{}) {
 		for path := range e.watchlists {
 			e.updateWathclist(path)
 		}
+	}()
+}
+
+//AddWatchlist saves a watchlist to disk. Skips saving if it already exists.
+func (e *Ebidlocal) AddWatchlist(list watchlist.Watchlist) error {
+	var watchlistDir = filepath.Join(e.config.WatchlistDir, list.ID())
+
+	e.logger.Info.Printf("Checking for '%s'\n", watchlistDir)
+	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
+		e.logger.Info.Println("Watch list already exists.")
+		return nil
+	}
+
+	e.logger.Info.Printf("Creating watchlist. '%s'", watchlistDir)
+	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
+		e.logger.Error.Println(err)
+		return err
+	}
+
+	file, err := json.Marshal(list)
+	if err != nil {
+		e.logger.Error.Println(err)
+		return err
+	}
+
+	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
+}
+
+func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
+	watchlistFile := filepath.Join(e.config.WatchlistDir, list.ID(), "data.json")
+	go func() {
+		e.watchlists <- watchlistFile
 	}()
 }
 
@@ -122,31 +161,6 @@ func (e *Ebidlocal) findWatchlists(done <-chan struct{}) <-chan string {
 	return foundWatchlists
 }
 
-//AddWatchlist saves a watchlist to disk. Skips saving if it already exists.
-func (e *Ebidlocal) AddWatchlist(list watchlist.Watchlist) error {
-	var watchlistDir = filepath.Join(e.config.WatchlistDir, list.ID())
-
-	e.logger.Info.Printf("Checking for '%s'\n", watchlistDir)
-	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
-		e.logger.Info.Println("Watch list already exists.")
-		return nil
-	}
-
-	e.logger.Info.Printf("Creating watchlist. '%s'", watchlistDir)
-	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
-		e.logger.Error.Println(err)
-		return err
-	}
-
-	file, err := json.Marshal(list)
-	if err != nil {
-		e.logger.Error.Println(err)
-		return err
-	}
-
-	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
-}
-
 func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 	watchlist, err := e.loadWatchlist(watchListFilePath)
 	if err != nil {
@@ -156,7 +170,7 @@ func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 
 	if file, err := os.Create(filepath.Join(filepath.Dir(watchListFilePath), "index.html")); err == nil {
 		defer file.Close()
-		if err := e.template.Execute(file, ebidlocal.Keywords(watchlist).Search()); err != nil {
+		if err := e.template.Execute(file, search.SearchAuctions(ebidLib.SliceStringGenerator(watchlist).Generator(), e.openAuctions.Generator())); err != nil {
 			e.logger.Error.Println(err)
 			return err
 		}

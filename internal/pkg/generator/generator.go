@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+//https://ewencp.org/blog/golang-iterators/index.html
 //IncrementingNumber returns a function that each time called it will return an incrementing number.
 func IncrementingNumber(start, step int) func() int {
 	var i int = start

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
 )
 
 const (
@@ -28,6 +30,10 @@ type AuctionsCache struct {
 	lastRefresh     time.Time
 	refreshInterval time.Duration
 	mux             sync.RWMutex
+}
+
+func (c *AuctionsCache) Generator() ebidLib.StringIterator {
+	return ebidLib.SliceStringGenerator(c.GetAuctions()).Generator()
 }
 
 //RefreshAuctionCache refreshes the auctions cache.
@@ -55,7 +61,7 @@ func requestOpenAuctions(saleEventsURL string) []string {
 }
 
 func scrapeAuctionUrls(saleEventsURL string) (urls []*url.URL) {
-	res, err := client.Get(saleEventsURL)
+	res, err := ebid.Client.Get(saleEventsURL)
 	if err != nil {
 		log.Println(err)
 		return urls

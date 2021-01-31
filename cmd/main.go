@@ -7,6 +7,7 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
+	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -33,6 +34,7 @@ func main() {
 	appConfig.Ebidlocal.ContentPath = *contentPath
 	appConfig.Server.ContentPath = *contentPath
 	ebid := ebidlocal.New(appConfig.Ebidlocal)
+	ebid.SetOpenAuctions(ebidLib.NewAuctionsCache())
 	doneChan := make(chan struct{})
 	go ebid.Scan(doneChan)
 	server.New(appConfig.Server, ebid).Run()
