@@ -1,11 +1,14 @@
 package ebidlocal
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
@@ -49,20 +52,22 @@ func New(config Config) *Ebidlocal {
 	}
 
 	return &Ebidlocal{
-		config:     config,
-		logger:     logger,
-		template:   t,
-		watchlists: make(chan string),
+		config:          config,
+		logger:          logger,
+		template:        t,
+		watchlists:      make(chan string),
+		auctionSearcher: search.AuctionSearchFunc(search.SearchAuctions),
 	}
 }
 
 //Ebidlocal data for ebidlocal app
 type Ebidlocal struct {
-	config       Config
-	logger       *log.Logger
-	template     *template.Template
-	watchlists   chan string
-	openAuctions ebidLib.StringGenerator
+	config          Config
+	logger          *log.Logger
+	template        *template.Template
+	watchlists      chan string
+	openAuctions    ebidLib.StringGenerator
+	auctionSearcher search.AuctionSearcher
 }
 
 func (e *Ebidlocal) SetOpenAuctions(openAuctions ebidLib.StringGenerator) *Ebidlocal {
@@ -71,22 +76,18 @@ func (e *Ebidlocal) SetOpenAuctions(openAuctions ebidLib.StringGenerator) *Ebidl
 }
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
-func (e *Ebidlocal) Scan(done <-chan struct{}) {
+func (e *Ebidlocal) Scan(ctx context.Context) {
 	go func() {
-		for path := range e.findWatchlists(done) {
+		for path := range e.findWatchlists(ctx) {
 			e.watchlists <- path
 		}
 	}()
 
-	go func() {
-		//TODO: Fix this to requeue failed updates.
-		//TODO: Fix to make failed requets back off and eventually die.
-		//TODO: Fix to rate limit requets.
-		//TODO: Email to. With verification.
-		for path := range e.watchlists {
-			e.updateWathclist(path)
-		}
-	}()
+	//TODO: Fix this to re-queue failed updates.
+	//TODO: Fix to make failed requests back off and eventually die.
+	//TODO: Fix to rate limit requests.
+	//TODO: Email to. With verification.
+	e.batchUpdateWatchlists(10 * time.Second)
 }
 
 //AddWatchlist saves a watchlist to disk. Skips saving if it already exists.
@@ -108,6 +109,9 @@ func (e *Ebidlocal) AddWatchlist(list watchlist.Watchlist) error {
 	file, err := json.Marshal(list)
 	if err != nil {
 		e.logger.Error.Println(err)
+		if err2 := os.RemoveAll(watchlistDir); err2 != nil {
+			err = fmt.Errorf("%v: %w", err, err2)
+		}
 		return err
 	}
 
@@ -121,7 +125,7 @@ func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
 	}()
 }
 
-func (e *Ebidlocal) findWatchlists(done <-chan struct{}) <-chan string {
+func (e *Ebidlocal) findWatchlists(ctx context.Context) <-chan string {
 	timeBetweenRuns := time.Duration(e.config.ScanInterval) * time.Second
 	watchlistDir := e.config.WatchlistDir
 	foundWatchlists := make(chan string)
@@ -148,7 +152,7 @@ func (e *Ebidlocal) findWatchlists(done <-chan struct{}) <-chan string {
 			}
 
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			default:
 			}
@@ -161,6 +165,34 @@ func (e *Ebidlocal) findWatchlists(done <-chan struct{}) <-chan string {
 	return foundWatchlists
 }
 
+func (e *Ebidlocal) batchUpdateWatchlists(runInterval time.Duration) {
+	for path := range e.watchlists {
+		var wg sync.WaitGroup
+		wg.Add(4)
+		startTime := time.Now()
+		go func() {
+			e.updateWathclist(path)
+			wg.Done()
+		}()
+		go func() {
+			e.updateWathclist(<-e.watchlists)
+			wg.Done()
+		}()
+		go func() {
+			e.updateWathclist(<-e.watchlists)
+			wg.Done()
+		}()
+		go func() {
+			e.updateWathclist(<-e.watchlists)
+			wg.Done()
+		}()
+		wg.Wait()
+		if elaspsedTime := time.Since(startTime); elaspsedTime < runInterval {
+			time.Sleep(runInterval - elaspsedTime)
+		}
+	}
+}
+
 func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 	watchlist, err := e.loadWatchlist(watchListFilePath)
 	if err != nil {
@@ -170,7 +202,7 @@ func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 
 	if file, err := os.Create(filepath.Join(filepath.Dir(watchListFilePath), "index.html")); err == nil {
 		defer file.Close()
-		if err := e.template.Execute(file, search.SearchAuctions(ebidLib.SliceStringGenerator(watchlist).Generator(), e.openAuctions.Generator())); err != nil {
+		if err := e.template.Execute(file, e.auctionSearcher.Search(ebidLib.SliceStringGenerator(watchlist).Generator(), e.openAuctions.Generator())); err != nil {
 			e.logger.Error.Println(err)
 			return err
 		}

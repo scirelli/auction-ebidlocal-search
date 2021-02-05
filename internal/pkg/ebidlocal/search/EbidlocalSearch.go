@@ -18,7 +18,18 @@ const (
 	//SearchURL url to to append auction id to to search for items.
 	SearchURL    string = "https://auction.ebidlocal.com/cgi-bin/mmlist.cgi"
 	requestDelay        = 1
+	maxRetries          = 3
 )
+
+type AuctionSearcher interface {
+	Search(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string)
+}
+
+type AuctionSearchFunc func(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string)
+
+func (as AuctionSearchFunc) Search(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string) {
+	return as(keywords, auctions)
+}
 
 func SearchAuctions(keywordIter ebidLib.StringIterator, openAuctions ebidLib.StringIterator) (results chan string) {
 	var offset time.Duration
@@ -37,7 +48,9 @@ func SearchAuctions(keywordIter ebidLib.StringIterator, openAuctions ebidLib.Str
 			defer wg.Done()
 			time.Sleep(offset)
 			log.Printf("Searching auction '%s'", auction)
-			results <- SearchAuction(auction, keywords)
+			if html, err := SearchAuction(auction, keywords); err == nil {
+				results <- html
+			}
 		}(auction, offset)
 		offset += time.Second * requestDelay
 	}
@@ -50,9 +63,8 @@ func SearchAuctions(keywordIter ebidLib.StringIterator, openAuctions ebidLib.Str
 	return results
 }
 
-func SearchAuction(auction string, keywords []string) (html string) {
+func SearchAuction(auction string, keywords []string) (html string, err error) {
 	var res *http.Response
-	var err error
 
 	res, err = ebid.Client.PostForm(SearchURL, url.Values{
 		"auction": {auction},
@@ -62,23 +74,27 @@ func SearchAuction(auction string, keywords []string) (html string) {
 	})
 	if err != nil {
 		log.Println(err)
-		return html
+		return html, err
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
-		return html
+		return html, err
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Println(err)
-		return html
+		return html, err
 	}
 
-	html, _ = doc.Find("#DataTable tbody").First().Html()
+	html, err = doc.Find("#DataTable tbody").First().Html()
+	if err != nil {
+		return html, err
+	}
+
 	log.Println("Got auction data.")
-	return html
+	return html, nil
 }

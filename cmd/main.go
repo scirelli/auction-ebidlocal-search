@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -35,8 +36,8 @@ func main() {
 	appConfig.Server.ContentPath = *contentPath
 	ebid := ebidlocal.New(appConfig.Ebidlocal)
 	ebid.SetOpenAuctions(ebidLib.NewAuctionsCache())
-	doneChan := make(chan struct{})
-	go ebid.Scan(doneChan)
+	ctx, cancel := context.WithCancel(context.Background())
+	go ebid.Scan(ctx)
 	server.New(appConfig.Server, ebid).Run()
-	close(doneChan)
+	cancel()
 }
