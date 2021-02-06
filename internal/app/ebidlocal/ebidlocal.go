@@ -13,8 +13,8 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
 
-	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
 	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -66,11 +66,11 @@ type Ebidlocal struct {
 	logger          *log.Logger
 	template        *template.Template
 	watchlists      chan string
-	openAuctions    ebidLib.StringGenerator
+	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
 }
 
-func (e *Ebidlocal) SetOpenAuctions(openAuctions ebidLib.StringGenerator) *Ebidlocal {
+func (e *Ebidlocal) SetOpenAuctions(openAuctions stringiter.Iterable) *Ebidlocal {
 	e.openAuctions = openAuctions
 	return e
 }
@@ -202,7 +202,7 @@ func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 
 	if file, err := os.Create(filepath.Join(filepath.Dir(watchListFilePath), "index.html")); err == nil {
 		defer file.Close()
-		if err := e.template.Execute(file, e.auctionSearcher.Search(ebidLib.SliceStringGenerator(watchlist).Generator(), e.openAuctions.Generator())); err != nil {
+		if err := e.template.Execute(file, e.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), e.openAuctions)); err != nil {
 			e.logger.Error.Println(err)
 			return err
 		}

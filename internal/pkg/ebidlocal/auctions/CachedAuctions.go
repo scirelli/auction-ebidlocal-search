@@ -8,7 +8,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 )
 
 const (
@@ -32,8 +32,8 @@ type AuctionsCache struct {
 	mux             sync.RWMutex
 }
 
-func (c *AuctionsCache) Generator() ebidLib.StringIterator {
-	return ebidLib.SliceStringGenerator(c.GetAuctions()).Generator()
+func (c *AuctionsCache) Iterator() stringiter.Iterator {
+	return stringiter.SliceStringIterator(c.GetAuctions()).Iterator()
 }
 
 //RefreshAuctionCache refreshes the auctions cache.

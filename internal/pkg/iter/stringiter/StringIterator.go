@@ -1,4 +1,4 @@
-package ebidlocal
+package stringiter
 
 // type StringIterator interface {
 // 	Next() bool
@@ -35,25 +35,25 @@ package ebidlocal
 // }
 
 //----------------------------------------------------------------
-type StringIterator interface {
+type Iterator interface {
 	Next() (string, bool)
 }
 
-type StringGenerator interface {
-	Generator() StringIterator
+type Iterable interface {
+	Iterator() Iterator
 }
 
-type StringIteratorFunc func() (string, bool)
+type IteratorFunc func() (string, bool)
 
-func (s StringIteratorFunc) Next() (string, bool) {
+func (s IteratorFunc) Next() (string, bool) {
 	return s()
 }
 
-type SliceStringGenerator []string
+type SliceStringIterator []string
 
-func (ssg SliceStringGenerator) Generator() StringIterator {
+func (ssg SliceStringIterator) Iterator() Iterator {
 	var i int
-	return StringIteratorFunc(func() (string, bool) {
+	return IteratorFunc(func() (string, bool) {
 		if i >= len(ssg) {
 			return "", false
 		}

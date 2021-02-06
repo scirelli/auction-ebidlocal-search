@@ -11,7 +11,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/generator"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 )
 
 const (
@@ -22,27 +22,28 @@ const (
 )
 
 type AuctionSearcher interface {
-	Search(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string)
+	Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
 }
 
-type AuctionSearchFunc func(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string)
+type AuctionSearchFunc func(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
 
-func (as AuctionSearchFunc) Search(keywords ebidLib.StringIterator, auctions ebidLib.StringIterator) (results chan string) {
+func (as AuctionSearchFunc) Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string) {
 	return as(keywords, auctions)
 }
 
-func SearchAuctions(keywordIter ebidLib.StringIterator, openAuctions ebidLib.StringIterator) (results chan string) {
+func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan string) {
 	var offset time.Duration
 	var wg sync.WaitGroup
 	var keywords []string
-
+	var iter stringiter.Iterator = keywordIter.Iterator()
 	results = make(chan string)
 
-	for keyword, done := keywordIter.Next(); done; keyword, done = keywordIter.Next() {
+	for keyword, done := iter.Next(); done; keyword, done = iter.Next() {
 		keywords = append(keywords, keyword)
 	}
 
-	for auction, done := openAuctions.Next(); done; auction, done = openAuctions.Next() {
+	iter = openAuctions.Iterator()
+	for auction, done := iter.Next(); done; auction, done = iter.Next() {
 		wg.Add(1)
 		go func(auction string, offset time.Duration) {
 			defer wg.Done()
