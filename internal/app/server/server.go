@@ -14,6 +14,9 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
+	. "github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/store"
+	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -41,6 +44,12 @@ func New(config Config, ebidlocal *ebidlocal.Ebidlocal) *Server {
 		server.config.DataFileName = "data.json"
 	}
 
+	server.store = struct {
+		store.Storer
+	}{
+		store.UserStorer(storefs.NewUserStore(server.config.UserDir, server.config.DataFileName, server.logger)),
+	}
+
 	server.registerHTTPHandlers()
 
 	return &server
@@ -50,6 +59,7 @@ type Server struct {
 	logger    *log.Logger
 	addr      *url.URL
 	ebidlocal *ebidlocal.Ebidlocal
+	store     store.Storer
 	config    Config
 }
 
@@ -112,9 +122,17 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.ID, err = s.createUser(user.Name)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Could not create user")
+	user = NewUser(user.Name)
+	if _, err = s.createUserSpace(&user); err != nil {
+		respondError(w, http.StatusInternalServerError, "User not created")
+		s.logger.Error.Printf("Failed to create user %s", user.ID)
+		return
+	}
+
+	if err = s.store.SaveUser(&user); err != nil {
+		defer s.store.DeleteUser(user.ID)
+		respondError(w, http.StatusInternalServerError, "User not created")
+		s.logger.Error.Printf("Failed to create user %s", user.ID)
 		return
 	}
 	s.logger.Info.Printf("User created '%s'\n", user.ID)
@@ -128,29 +146,13 @@ func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
 	return router
 }
 
-//createUser create a new user, this also builds the user's workspace.
-func (s *Server) createUser(username string) (string, error) {
-	var err error
-
-	u := NewUser(username)
-	u.UserDir, err = s.createUserSpace(&u)
-	if err != nil {
-		return "", err
-	}
-
-	err = s.saveUser(&u)
-	if err != nil {
-		return "", err
-	}
-
-	return u.ID, nil
-}
-
 func (s *Server) createUserSpace(u *User) (string, error) {
 	var userDir string = filepath.Join(s.config.UserDir, u.ID)
 
-	s.logger.Info.Printf("Creating user '%s' at '%s'\n", u.ID, userDir)
-	os.MkdirAll(userDir, 0775)
+	if err := os.MkdirAll(userDir, 0775); err != nil {
+		s.logger.Error.Println(err)
+		return "", err
+	}
 
 	if err := ioutil.WriteFile(filepath.Join(userDir, "index.html"), []byte("<html><body>Nothing here yet."), 0644); err != nil {
 		return "", err
@@ -166,40 +168,6 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 	}
 
 	return userDir, nil
-}
-
-func (s *Server) saveUser(u *User) error {
-	file, err := json.Marshal(u)
-	if err != nil {
-		s.logger.Error.Println(err)
-		return err
-	}
-	return ioutil.WriteFile(filepath.Join(u.UserDir, s.config.DataFileName), file, 0644)
-}
-
-func (s *Server) loadUser(userID string) (*User, error) {
-	var userDataFile string = filepath.Join(s.config.ContentPath, s.config.UserDir, userID, s.config.DataFileName)
-
-	if _, err := os.Stat(userDataFile); os.IsNotExist(err) {
-		s.logger.Info.Println("User does not exist")
-		return nil, err
-	}
-
-	var usr User
-	jsonFile, err := os.Open(userDataFile)
-	if err != nil {
-		s.logger.Error.Println(err)
-		return nil, err
-	}
-	defer jsonFile.Close()
-
-	dec := json.NewDecoder(jsonFile)
-	if err := dec.Decode(&usr); err != nil {
-		s.logger.Error.Println(err)
-		return nil, err
-	}
-
-	return &usr, nil
 }
 
 func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +201,7 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 
 //addUserWatchlist add a watch list to a user's group of watch lists.
 func (s *Server) addUserWatchlist(userID string, watchlistName string, list watchlist.Watchlist) (string, error) {
-	user, err := s.loadUser(userID)
+	user, err := s.store.LoadUser(userID)
 	if err != nil {
 		return "", err
 	}
@@ -244,7 +212,7 @@ func (s *Server) addUserWatchlist(userID string, watchlistName string, list watc
 
 	listID := list.ID()
 	user.Watchlists[watchlistName] = listID
-	return listID, s.saveUser(user)
+	return listID, s.store.SaveUser(user)
 }
 
 // respondJSON makes the response with payload as json format

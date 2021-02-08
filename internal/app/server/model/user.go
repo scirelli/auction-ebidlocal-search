@@ -1,4 +1,4 @@
-package server
+package model
 
 import (
 	b64 "encoding/base64"

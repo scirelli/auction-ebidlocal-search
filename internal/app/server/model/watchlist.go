@@ -1,4 +1,4 @@
-package server
+package model
 
 type Watchlist struct {
 	List []string `json:"list"`
