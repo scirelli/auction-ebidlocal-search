@@ -44,11 +44,13 @@ func New(config Config, ebidlocal *ebidlocal.Ebidlocal) *Server {
 		server.config.DataFileName = "data.json"
 	}
 
-	server.store = struct {
-		store.Storer
+	server.store = store.Storer(&struct {
+		store.UserStorer
+		store.WatchlistStorer
 	}{
-		store.UserStorer(storefs.NewUserStore(server.config.UserDir, server.config.DataFileName, server.logger)),
-	}
+		storefs.NewUserStore(server.config.UserDir, server.config.DataFileName, server.logger),
+		storefs.NewWatchlistStore(server.ebidlocal, server.logger),
+	})
 
 	server.registerHTTPHandlers()
 
@@ -107,6 +109,11 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	return router
 }
 
+func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
+	router.Methods("GET").Handler(http.StripPrefix("/watchlist", http.FileServer(http.Dir("./web/watchlists"))))
+	return router
+}
+
 func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var user User
@@ -123,14 +130,13 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user = NewUser(user.Name)
-	if _, err = s.createUserSpace(&user); err != nil {
+	if err = s.store.SaveUser(&user); err != nil {
+		defer s.store.DeleteUser(user.ID)
 		respondError(w, http.StatusInternalServerError, "User not created")
 		s.logger.Error.Printf("Failed to create user %s", user.ID)
 		return
 	}
-
-	if err = s.store.SaveUser(&user); err != nil {
-		defer s.store.DeleteUser(user.ID)
+	if _, err = s.createUserSpace(&user); err != nil {
 		respondError(w, http.StatusInternalServerError, "User not created")
 		s.logger.Error.Printf("Failed to create user %s", user.ID)
 		return
@@ -141,9 +147,33 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, user)
 }
 
-func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
-	router.Methods("GET").Handler(http.StripPrefix("/watchlist", http.FileServer(http.Dir("./web/watchlists"))))
-	return router
+func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	var wl Watchlist
+
+	userID := mux.Vars(r)["userID"]
+
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&wl); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if !wl.IsValid() {
+		respondError(w, http.StatusBadRequest, "User watchlist is required.")
+		return
+	}
+
+	listID, err := s.addUserWatchlist(userID, &wl)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create watch list")
+		return
+	}
+
+	s.logger.Info.Printf("Create watch list called '%s'", wl.Name)
+	w.Header().Set("Location", fmt.Sprintf("/user/%s/watchlist/%s", url.PathEscape(userID), url.PathEscape(listID)))
+	respondJSON(w, http.StatusCreated, struct {
+		WatchlistID string `json:"watchlistID"`
+	}{WatchlistID: listID})
 }
 
 func (s *Server) createUserSpace(u *User) (string, error) {
@@ -170,48 +200,18 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 	return userDir, nil
 }
 
-func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	var wl Watchlist
-
-	userID := mux.Vars(r)["userID"]
-
-	defer r.Body.Close()
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&wl); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	if !wl.IsValid() {
-		respondError(w, http.StatusBadRequest, "User watchlist is required.")
-		return
-	}
-
-	listID, err := s.addUserWatchlist(userID, wl.Name, wl.List)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create watch list")
-		return
-	}
-
-	s.logger.Info.Printf("Create watch list called '%s'", wl.Name)
-	w.Header().Set("Location", fmt.Sprintf("/user/%s/watchlist/%s", url.PathEscape(userID), url.PathEscape(listID)))
-	respondJSON(w, http.StatusCreated, struct {
-		WatchlistID string `json:"watchlistID"`
-	}{WatchlistID: listID})
-}
-
 //addUserWatchlist add a watch list to a user's group of watch lists.
-func (s *Server) addUserWatchlist(userID string, watchlistName string, list watchlist.Watchlist) (string, error) {
+func (s *Server) addUserWatchlist(userID string, list *Watchlist) (string, error) {
 	user, err := s.store.LoadUser(userID)
 	if err != nil {
 		return "", err
 	}
-	if err := s.ebidlocal.AddWatchlist(list); err != nil {
+	if err := s.store.SaveWatchlist(list); err != nil {
 		return "", err
 	}
-	s.ebidlocal.EnqueueWatchlist(list)
 
-	listID := list.ID()
-	user.Watchlists[watchlistName] = listID
+	listID := watchlist.Watchlist(list.List).ID()
+	user.Watchlists[list.Name] = listID
 	return listID, s.store.SaveUser(user)
 }
 

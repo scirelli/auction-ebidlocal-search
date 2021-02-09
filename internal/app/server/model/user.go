@@ -29,10 +29,10 @@ type User struct {
 	Email    string `json:"email"`
 	Verified bool   `json:"verified"`
 
-	UserDir string `json:"userDir"`
+	UserDir string `json:"-"`
 
 	//Wathclist names to ids
-	Watchlists map[string]string `json:"watchlists"`
+	Watchlists map[string]string `json:"watchlists,omitempty"`
 }
 
 func (u User) String() string {
