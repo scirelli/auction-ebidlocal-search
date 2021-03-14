@@ -18,7 +18,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-//New constructor for ebidlocal app.
+//New constructor for ebidlocal app. This app creates new watch lists on disk and has a scanner to keep them up-to-date.
 func New(config Config) *Ebidlocal {
 	var logger = log.New("Ebidlocal.New")
 
@@ -77,6 +77,7 @@ func (e *Ebidlocal) SetOpenAuctions(openAuctions stringiter.Iterable) *Ebidlocal
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
 func (e *Ebidlocal) Scan(ctx context.Context) {
+	//TODO: Pull this out into it's own service. An app that produces watch list paths.
 	go func() {
 		for path := range e.findWatchlists(ctx) {
 			e.watchlists <- path
@@ -118,6 +119,7 @@ func (e *Ebidlocal) AddWatchlist(list watchlist.Watchlist) error {
 	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
 }
 
+//EnqueueWatchlist takes a watch list, builds the path to the watch list data file, and puts it on the watch list queue.
 func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
 	watchlistFile := filepath.Join(e.config.WatchlistDir, list.ID(), "data.json")
 	go func() {
@@ -125,6 +127,8 @@ func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
 	}()
 }
 
+// findWatchlists walk the watch list directory on an internval.
+// returns a chan of paths to the watch list data file.
 func (e *Ebidlocal) findWatchlists(ctx context.Context) <-chan string {
 	timeBetweenRuns := time.Duration(e.config.ScanInterval) * time.Second
 	watchlistDir := e.config.WatchlistDir
@@ -165,6 +169,7 @@ func (e *Ebidlocal) findWatchlists(ctx context.Context) <-chan string {
 	return foundWatchlists
 }
 
+//batchUpdateWatchlists Batch update watch lists. Makes four requests at a time.
 func (e *Ebidlocal) batchUpdateWatchlists(runInterval time.Duration) {
 	for path := range e.watchlists {
 		var wg sync.WaitGroup
@@ -193,6 +198,7 @@ func (e *Ebidlocal) batchUpdateWatchlists(runInterval time.Duration) {
 	}
 }
 
+//updateWathclist loads a watch list, makes a request to ebid for new search results.
 func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 	watchlist, err := e.loadWatchlist(watchListFilePath)
 	if err != nil {
@@ -214,6 +220,7 @@ func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 	return nil
 }
 
+//loadWatchlist loads a watch list from file.
 func (e *Ebidlocal) loadWatchlist(filePath string) (watchlist.Watchlist, error) {
 	var watchlist watchlist.Watchlist = make([]string, 0)
 

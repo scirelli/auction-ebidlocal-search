@@ -8,6 +8,7 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
+	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
 	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -18,6 +19,7 @@ func main() {
 	var contentPath *string
 	var appConfig *AppConfig
 	var err error
+	ctx, cancel := context.WithCancel(context.Background())
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -36,8 +38,17 @@ func main() {
 	appConfig.Server.ContentPath = *contentPath
 	ebid := ebidlocal.New(appConfig.Ebidlocal)
 	ebid.SetOpenAuctions(ebidLib.NewAuctionsCache())
-	ctx, cancel := context.WithCancel(context.Background())
+
 	go ebid.Scan(ctx)
-	server.New(appConfig.Server, ebid).Run()
+
+	server.New(
+		appConfig.Server,
+		storefs.FSStore{
+			storefs.NewUserStore(appConfig.Server.UserDir, appConfig.Server.DataFileName, logger),
+			storefs.NewWatchlistStore(ebid, logger),
+		},
+		log.New("Server"),
+	).Run()
+
 	cancel()
 }

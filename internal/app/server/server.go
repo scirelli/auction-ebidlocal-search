@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,19 +13,15 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
 	. "github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/store"
-	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-func New(config Config, ebidlocal *ebidlocal.Ebidlocal) *Server {
+func New(config Config, store store.Storer, logger *log.Logger) *Server {
 	var server = Server{
-		config:    config,
-		logger:    log.New("Server"),
-		ebidlocal: ebidlocal,
+		config: config,
+		logger: logger,
 	}
 
 	if url, err := url.Parse(fmt.Sprintf("%s:%d", config.Address, config.Port)); err != nil {
@@ -33,36 +30,16 @@ func New(config Config, ebidlocal *ebidlocal.Ebidlocal) *Server {
 		server.addr = url
 	}
 
-	if config.ContentPath == "" {
-		server.config.ContentPath = "."
-	}
-	if config.UserDir == "" {
-		server.config.UserDir = filepath.Join(config.ContentPath, "web", "user")
-		server.logger.Info.Printf("Defaulting UserDir to '%s'\n", server.config.UserDir)
-	}
-	if config.DataFileName == "" {
-		server.config.DataFileName = "data.json"
-	}
-
-	server.store = store.Storer(&struct {
-		store.UserStorer
-		store.WatchlistStorer
-	}{
-		storefs.NewUserStore(server.config.UserDir, server.config.DataFileName, server.logger),
-		storefs.NewWatchlistStore(server.ebidlocal, server.logger),
-	})
-
 	server.registerHTTPHandlers()
 
 	return &server
 }
 
 type Server struct {
-	logger    *log.Logger
-	addr      *url.URL
-	ebidlocal *ebidlocal.Ebidlocal
-	store     store.Storer
-	config    Config
+	logger *log.Logger
+	addr   *url.URL
+	store  store.Storer
+	config Config
 }
 
 func (s *Server) Run() {
@@ -130,8 +107,8 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user = NewUser(user.Name)
-	if err = s.store.SaveUser(&user); err != nil {
-		defer s.store.DeleteUser(user.ID)
+	if _, err = s.store.SaveUser(r.Context(), &user); err != nil {
+		defer s.store.DeleteUser(r.Context(), user.ID)
 		respondError(w, http.StatusInternalServerError, "User not created")
 		s.logger.Error.Printf("Failed to create user %s", user.ID)
 		return
@@ -163,7 +140,7 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	listID, err := s.addUserWatchlist(userID, &wl)
+	listID, err := s.addUserWatchlist(r.Context(), userID, &wl)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to create watch list")
 		return
@@ -201,18 +178,23 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 }
 
 //addUserWatchlist add a watch list to a user's group of watch lists.
-func (s *Server) addUserWatchlist(userID string, list *Watchlist) (string, error) {
-	user, err := s.store.LoadUser(userID)
+func (s *Server) addUserWatchlist(ctx context.Context, userID string, list *Watchlist) (listID string, err error) {
+	user, err := s.store.LoadUser(ctx, userID)
 	if err != nil {
 		return "", err
 	}
-	if err := s.store.SaveWatchlist(list); err != nil {
+
+	if listID, err = s.store.SaveWatchlist(ctx, list); err != nil {
 		return "", err
 	}
 
-	listID := watchlist.Watchlist(list.List).ID()
 	user.Watchlists[list.Name] = listID
-	return listID, s.store.SaveUser(user)
+	if _, err = s.store.SaveUser(ctx, user); err != nil {
+		//Don't care about the watch list that was saved, since watch lists can be shared among users. No reason to delete it.
+		return "", err
+	}
+
+	return listID, nil
 }
 
 // respondJSON makes the response with payload as json format
