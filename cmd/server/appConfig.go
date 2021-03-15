@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
 )
 
@@ -26,11 +25,12 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 
 	json.Unmarshal(byteValue, &config)
 
+	server.Defaults(&config.Server)
+
 	return &config, nil
 }
 
 //AppConfig configuration data for entire application.
 type AppConfig struct {
-	Server    server.Config    `json:"server"`
-	Ebidlocal ebidlocal.Config `json:"ebidlocal"`
+	Server server.Config `json:"server"`
 }

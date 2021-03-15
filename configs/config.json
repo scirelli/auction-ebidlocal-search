@@ -1,12 +1,12 @@
 {
-    "server": {
-        "port": 8282,
-        "address": "localhost",
-        "contentPath": ""
-    },
-    "ebidlocal": {
-        "contentPath": "",
-        "scanIntervalSeconds": 180,
-        "asyncRequests": 3
-    }
+  "server": {
+    "port": 8282,
+    "address": "localhost",
+    "contentPath": ""
+  },
+  "scanner": {
+    "contentPath": "",
+    "scanIntervalSeconds": 180,
+    "asyncRequests": 3
+  }
 }

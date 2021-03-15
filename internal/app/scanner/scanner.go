@@ -1,57 +1,37 @@
-package ebidlocal
+package scanner
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
 
 	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-//New constructor for ebidlocal app. This app creates new watch lists on disk and has a scanner to keep them up-to-date.
-func New(config Config) *Ebidlocal {
-	var logger = log.New("Ebidlocal.New")
-
-	if config.ContentPath == "" {
-		config.ContentPath = "."
-		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
-	}
-	if config.TemplateDir == "" {
-		config.TemplateDir = "/template"
-		logger.Info.Printf("Defaulting template dir to '%s'\n", config.TemplateDir)
-	}
-	if config.DataFileName == "" {
-		config.DataFileName = "data.json"
-	}
-	if config.WatchlistDir == "" {
-		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
-		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
-	}
-	if config.ScanInterval == 0 {
-		config.ScanInterval = 1
-		logger.Info.Printf("Defaulting scan interval to '%d'\n", config.ScanInterval)
-	}
+//New constructor for scanner app. This app creates new watch lists on disk and has a scanner to keep them up-to-date.
+func New(config Config) *Scanner {
+	var logger = log.New("Scanner.New")
 
 	t, err := template.New("template.html.tmpl").Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
 	}).ParseFiles(filepath.Join("./", "assets", "templates", "template.html.tmpl"))
+
 	if err != nil {
 		logger.Error.Fatal(err)
 	}
 
-	return &Ebidlocal{
+	return &Scanner{
 		config:          config,
 		logger:          logger,
 		template:        t,
@@ -60,23 +40,24 @@ func New(config Config) *Ebidlocal {
 	}
 }
 
-//Ebidlocal data for ebidlocal app
-type Ebidlocal struct {
+//Scanner data for scanner bidlocal app
+type Scanner struct {
 	config          Config
 	logger          *log.Logger
 	template        *template.Template
 	watchlists      chan string
 	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
+	store           store.Storer
 }
 
-func (e *Ebidlocal) SetOpenAuctions(openAuctions stringiter.Iterable) *Ebidlocal {
+func (e *Scanner) SetOpenAuctions(openAuctions stringiter.Iterable) *Scanner {
 	e.openAuctions = openAuctions
 	return e
 }
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
-func (e *Ebidlocal) Scan(ctx context.Context) {
+func (e *Scanner) Scan(ctx context.Context) {
 	//TODO: Pull this out into it's own service. An app that produces watch list paths.
 	go func() {
 		for path := range e.findWatchlists(ctx) {
@@ -91,36 +72,8 @@ func (e *Ebidlocal) Scan(ctx context.Context) {
 	e.batchUpdateWatchlists(10 * time.Second)
 }
 
-//AddWatchlist saves a watchlist to disk. Skips saving if it already exists.
-func (e *Ebidlocal) AddWatchlist(list watchlist.Watchlist) error {
-	var watchlistDir = filepath.Join(e.config.WatchlistDir, list.ID())
-
-	e.logger.Info.Printf("Checking for '%s'\n", watchlistDir)
-	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
-		e.logger.Info.Println("Watch list already exists.")
-		return nil
-	}
-
-	e.logger.Info.Printf("Creating watchlist. '%s'", watchlistDir)
-	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
-		e.logger.Error.Println(err)
-		return err
-	}
-
-	file, err := json.Marshal(list)
-	if err != nil {
-		e.logger.Error.Println(err)
-		if err2 := os.RemoveAll(watchlistDir); err2 != nil {
-			err = fmt.Errorf("%v: %w", err, err2)
-		}
-		return err
-	}
-
-	return ioutil.WriteFile(filepath.Join(watchlistDir, "data.json"), file, 0644)
-}
-
 //EnqueueWatchlist takes a watch list, builds the path to the watch list data file, and puts it on the watch list queue.
-func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
+func (e *Scanner) EnqueueWatchlist(list watchlist.Watchlist) {
 	watchlistFile := filepath.Join(e.config.WatchlistDir, list.ID(), "data.json")
 	go func() {
 		e.watchlists <- watchlistFile
@@ -129,7 +82,7 @@ func (e *Ebidlocal) EnqueueWatchlist(list watchlist.Watchlist) {
 
 // findWatchlists walk the watch list directory on an internval.
 // returns a chan of paths to the watch list data file.
-func (e *Ebidlocal) findWatchlists(ctx context.Context) <-chan string {
+func (e *Scanner) findWatchlists(ctx context.Context) <-chan string {
 	timeBetweenRuns := time.Duration(e.config.ScanInterval) * time.Second
 	watchlistDir := e.config.WatchlistDir
 	foundWatchlists := make(chan string)
@@ -170,7 +123,7 @@ func (e *Ebidlocal) findWatchlists(ctx context.Context) <-chan string {
 }
 
 //batchUpdateWatchlists Batch update watch lists. Makes four requests at a time.
-func (e *Ebidlocal) batchUpdateWatchlists(runInterval time.Duration) {
+func (e *Scanner) batchUpdateWatchlists(runInterval time.Duration) {
 	for path := range e.watchlists {
 		var wg sync.WaitGroup
 		wg.Add(4)
@@ -199,7 +152,7 @@ func (e *Ebidlocal) batchUpdateWatchlists(runInterval time.Duration) {
 }
 
 //updateWathclist loads a watch list, makes a request to ebid for new search results.
-func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
+func (e *Scanner) updateWathclist(watchListFilePath string) error {
 	watchlist, err := e.loadWatchlist(watchListFilePath)
 	if err != nil {
 		e.logger.Error.Println(err)
@@ -221,7 +174,7 @@ func (e *Ebidlocal) updateWathclist(watchListFilePath string) error {
 }
 
 //loadWatchlist loads a watch list from file.
-func (e *Ebidlocal) loadWatchlist(filePath string) (watchlist.Watchlist, error) {
+func (e *Scanner) loadWatchlist(filePath string) (watchlist.Watchlist, error) {
 	var watchlist watchlist.Watchlist = make([]string, 0)
 
 	jsonFile, err := os.Open(filePath)

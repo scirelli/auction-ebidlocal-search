@@ -32,7 +32,7 @@ type User struct {
 	UserDir string `json:"-"`
 
 	//Wathclist names to ids
-	Watchlists map[string]string `json:"watchlists,omitempty"`
+	Watchlists map[string]string `json:"watchlists"`
 }
 
 func (u User) String() string {

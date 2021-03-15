@@ -1,4 +1,4 @@
-package server
+package scanner
 
 import (
 	"encoding/json"
@@ -25,40 +25,44 @@ func Load(fileName string) (*Config, error) {
 	}
 
 	json.Unmarshal(byteValue, &config)
-
 	Defaults(&config)
 
 	return &config, nil
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("ServerConfig")
+	var logger = log.New("Config.Load")
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
+		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
-	if config.UserDir == "" {
-		config.UserDir = filepath.Join(config.ContentPath, "web", "user")
-		logger.Info.Printf("Defaulting UserDir to '%s'\n", config.UserDir)
+	if config.TemplateDir == "" {
+		config.TemplateDir = "/template"
+		logger.Info.Printf("Defaulting template dir to '%s'\n", config.TemplateDir)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
-		logger.Info.Printf("Defaulting DataFileName to '%s'\n", config.DataFileName)
 	}
 	if config.WatchlistDir == "" {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
 		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
+	if config.ScanInterval == 0 {
+		config.ScanInterval = 1
+		logger.Info.Printf("Defaulting scan interval to '%d'\n", config.ScanInterval)
+	}
 
 	return config
 }
 
+//Config for scanner app
 type Config struct {
-	Port    uint   `json:"port"`
-	Address string `json:"address"`
-
-	ContentPath  string `json:"contentPath"`
-	UserDir      string `json:"userDir"`
-	DataFileName string `json:"dataFileName"`
-	WatchlistDir string `json:"watchlistDir"`
+	//ContentPath all config paths should be relative to the content path.
+	ContentPath   string `json:"contentPath"`
+	TemplateDir   string `json:"templateDir"`
+	DataFileName  string `json:"dataFileName"`
+	WatchlistDir  string `json:"watchlistDir"`
+	ScanInterval  int64  `json:"scanIntervalSeconds"`
+	AsyncRequests int64  `json:"asyncRequests"`
 }

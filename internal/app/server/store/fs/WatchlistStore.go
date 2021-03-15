@@ -4,30 +4,31 @@ import (
 	"context"
 	"errors"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal/watchlist"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
+	ebidstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-func NewWatchlistStore(ebidlocal *ebidlocal.Ebidlocal, logger *log.Logger) *EbidlocalAsWatchlistStore {
+//NewWatchlistStore adapter for Ebidlocal store.
+func NewWatchlistStore(store ebidstore.Storer, logger *log.Logger) *EbidlocalAsWatchlistStore {
 	return &EbidlocalAsWatchlistStore{
-		ebidlocal: ebidlocal,
-		logger:    logger,
+		store:  store,
+		logger: logger,
 	}
 }
 
+//EbidlocalAsWatchlistStore adapter for Ebidlocal store.
 type EbidlocalAsWatchlistStore struct {
-	ebidlocal *ebidlocal.Ebidlocal
-	logger    *log.Logger
+	store  ebidstore.Storer
+	logger *log.Logger
 }
 
-func (wl *EbidlocalAsWatchlistStore) SaveWatchlist(ctx context.Context, wlist *model.Watchlist) (ID string, err error) {
-	if err = wl.ebidlocal.AddWatchlist(wlist.List); err != nil {
+func (wl *EbidlocalAsWatchlistStore) SaveWatchlist(ctx context.Context, list *model.Watchlist) (ID string, err error) {
+	if ID, err = wl.store.SaveWatchlist(ctx, watchlist.Watchlist(list.List)); err != nil {
 		return "", err
 	}
-	wl.ebidlocal.EnqueueWatchlist(wlist.List)
-	return watchlist.Watchlist(wlist.List).ID(), nil
+	return ID, nil
 }
 
 func (wl *EbidlocalAsWatchlistStore) LoadWatchlist(ctx context.Context, watchlistID string) (*model.Watchlist, error) {

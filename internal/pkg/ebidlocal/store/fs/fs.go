@@ -1,8 +1,7 @@
 package fs
 
-import "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store"
+import "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 
 type FSStore struct {
-	store.UserStorer
 	store.WatchlistStorer
 }

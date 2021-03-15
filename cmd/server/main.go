@@ -1,25 +1,22 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/app/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
 	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
-	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
+	ebidfsstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
 func main() {
 	var logger = log.New("Main")
-	var configPath *string = flag.String("config-path", os.Getenv("EBIDLOCAL_CONFIG"), "path to the config file.")
+	var configPath *string = flag.String("config-path", os.Getenv("SERVER_CONFIG"), "path to the config file.")
 	var contentPath *string
 	var appConfig *AppConfig
 	var err error
-	ctx, cancel := context.WithCancel(context.Background())
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -34,21 +31,17 @@ func main() {
 		logger.Error.Fatalln(err)
 	}
 
-	appConfig.Ebidlocal.ContentPath = *contentPath
 	appConfig.Server.ContentPath = *contentPath
-	ebid := ebidlocal.New(appConfig.Ebidlocal)
-	ebid.SetOpenAuctions(ebidLib.NewAuctionsCache())
-
-	go ebid.Scan(ctx)
+	fsStore := ebidfsstore.NewWatchlistStore(ebidfsstore.StoreConfig{
+		WatchlistDir: appConfig.Server.WatchlistDir,
+	}, logger)
 
 	server.New(
 		appConfig.Server,
 		storefs.FSStore{
 			storefs.NewUserStore(appConfig.Server.UserDir, appConfig.Server.DataFileName, logger),
-			storefs.NewWatchlistStore(ebid, logger),
+			storefs.NewWatchlistStore(fsStore, logger),
 		},
 		log.New("Server"),
 	).Run()
-
-	cancel()
 }

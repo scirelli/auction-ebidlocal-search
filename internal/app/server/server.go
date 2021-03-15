@@ -22,6 +22,7 @@ func New(config Config, store store.Storer, logger *log.Logger) *Server {
 	var server = Server{
 		config: config,
 		logger: logger,
+		store:  store,
 	}
 
 	if url, err := url.Parse(fmt.Sprintf("%s:%d", config.Address, config.Port)); err != nil {
