@@ -34,8 +34,8 @@ func main() {
 
 	appConfig.Scanner.ContentPath = *contentPath
 
-	ebid := scanner.New(appConfig.Scanner)
-	ebid.SetOpenAuctions(ebidLib.NewAuctionsCache())
-	ebid.Scan(ctx)
+	scan := scanner.New(appConfig.Scanner)
+	scan.SetOpenAuctions(ebidLib.NewAuctionsCache())
+	scan.Scan(ctx)
 	cancel()
 }

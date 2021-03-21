@@ -2,8 +2,11 @@ package scanner
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"path/filepath"
 	"sync"
@@ -58,7 +61,6 @@ func (e *Scanner) SetOpenAuctions(openAuctions stringiter.Iterable) *Scanner {
 
 //Scan kick off directory scanner which keeps watchlists up-to-date.
 func (e *Scanner) Scan(ctx context.Context) {
-	//TODO: Pull this out into it's own service. An app that produces watch list paths.
 	go func() {
 		for path := range e.findWatchlists(ctx) {
 			e.watchlists <- path
@@ -129,20 +131,35 @@ func (e *Scanner) batchUpdateWatchlists(runInterval time.Duration) {
 		wg.Add(4)
 		startTime := time.Now()
 		go func() {
-			e.updateWathclist(path)
-			wg.Done()
+			defer wg.Done()
+			if err := e.updateWatchlistResults(path); err != nil {
+				return
+			}
+			e.notifyOnChange(path)
 		}()
 		go func() {
-			e.updateWathclist(<-e.watchlists)
-			wg.Done()
+			defer wg.Done()
+			path := <-e.watchlists
+			if err := e.updateWatchlistResults(path); err != nil {
+				return
+			}
+			e.notifyOnChange(path)
 		}()
 		go func() {
-			e.updateWathclist(<-e.watchlists)
-			wg.Done()
+			defer wg.Done()
+			path := <-e.watchlists
+			if err := e.updateWatchlistResults(path); err != nil {
+				return
+			}
+			e.notifyOnChange(path)
 		}()
 		go func() {
-			e.updateWathclist(<-e.watchlists)
-			wg.Done()
+			defer wg.Done()
+			path := <-e.watchlists
+			if err := e.updateWatchlistResults(path); err != nil {
+				return
+			}
+			e.notifyOnChange(path)
 		}()
 		wg.Wait()
 		if elaspsedTime := time.Since(startTime); elaspsedTime < runInterval {
@@ -151,15 +168,26 @@ func (e *Scanner) batchUpdateWatchlists(runInterval time.Duration) {
 	}
 }
 
-//updateWathclist loads a watch list, makes a request to ebid for new search results.
-func (e *Scanner) updateWathclist(watchListFilePath string) error {
-	watchlist, err := e.loadWatchlist(watchListFilePath)
+func (e *Scanner) notifyOnChange(watchlistFilePath string) error {
+	var id string
+	var err error
+	if id, err = getResultID(e.watchlistFileFromPath(watchlistFilePath)); err != nil {
+		e.logger.Error.Println(err)
+		return err
+	}
+	e.logger.Info.Println(id)
+	return nil
+}
+
+//updateWathclistResults loads a watch list, makes a request to ebid for new search results.
+func (e *Scanner) updateWatchlistResults(watchlistFilePath string) error {
+	watchlist, err := e.loadWatchlist(watchlistFilePath)
 	if err != nil {
 		e.logger.Error.Println(err)
 		return err
 	}
 
-	if file, err := os.Create(filepath.Join(filepath.Dir(watchListFilePath), "index.html")); err == nil {
+	if file, err := os.Create(e.watchlistFileFromPath(watchlistFilePath)); err == nil {
 		defer file.Close()
 		if err := e.template.Execute(file, e.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), e.openAuctions)); err != nil {
 			e.logger.Error.Println(err)
@@ -171,6 +199,10 @@ func (e *Scanner) updateWathclist(watchListFilePath string) error {
 	}
 
 	return nil
+}
+
+func (e *Scanner) watchlistFileFromPath(watchlistFilePath string) string {
+	return filepath.Join(filepath.Dir(watchlistFilePath), "index.html")
 }
 
 //loadWatchlist loads a watch list from file.
@@ -190,4 +222,19 @@ func (e *Scanner) loadWatchlist(filePath string) (watchlist.Watchlist, error) {
 	}
 	e.logger.Info.Printf("Watch list found '%v'", watchlist)
 	return watchlist, nil
+}
+
+func getResultID(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha1.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
