@@ -1,29 +1,32 @@
 package notify
 
+import "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
+
 func New() Notifier {
-	return &Change{}
+	var n Listeners = Listeners(make([]chan<- watchlist.Watchlist, 1))
+	return &n
 }
 
-type Change struct {
-	listeners []chan Watchlist
+type Listeners []chan<- watchlist.Watchlist
+
+func (l *Listeners) Register(watchlistChan chan<- watchlist.Watchlist) {
+	*l = append(*l, watchlistChan)
 }
 
-func (c *Change) Register(watchlistChan chan<- Watchlist) {
-	c.listeners = append(c.listeners, watchlistChan)
-}
-
-func (c *Change) Unregister(watchlistChan chan<- Watchlist) {
-	for i, c := range c.listeners {
+func (l *Listeners) Unregister(watchlistChan chan<- watchlist.Watchlist) {
+	var listeners = *l
+	for i, c := range listeners {
 		if c == watchlistChan {
-			e.listeners[i] = e.listeners[len(e.listeners)-1]
-			e.listeners = e.listeners[:len(e.listeners)-1]
+			listeners[i] = listeners[len(listeners)-1]
+			listeners = listeners[:len(listeners)-1]
 			break
 		}
 	}
+	*l = listeners
 }
 
-func (c *Change) Notify(wl Watchlist) {
-	for _, c := range c.listeners {
+func (l *Listeners) Notify(wl watchlist.Watchlist) {
+	for _, c := range *l {
 		select {
 		case c <- wl:
 		default:

@@ -7,6 +7,10 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 )
 
 type mockClient struct {
@@ -23,7 +27,7 @@ func (m *mockClient) Get(url string) (resp *http.Response, err error) {
 }
 
 func TestSearchAuction(t *testing.T) {
-	client = &mockClient{
+	ebid.Client = &mockClient{
 		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body:       ioutil.NopCloser(strings.NewReader("hello world")),
@@ -34,13 +38,14 @@ func TestSearchAuction(t *testing.T) {
 			return nil, nil
 		},
 	}
-	result := SearchAuction("auction1", []string{"hi", "there"})
+	result, err := SearchAuction("auction1", []string{"hi", "there"})
 	expected := ""
+	assert.Nilf(t, err, "Should not return an error", err)
 	if result != expected {
 		t.Errorf("'%v' not equal '%v'", result, expected)
 	}
 
-	client = &mockClient{
+	ebid.Client = &mockClient{
 		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body:       ioutil.NopCloser(strings.NewReader("hello world")),
@@ -51,13 +56,14 @@ func TestSearchAuction(t *testing.T) {
 			return nil, nil
 		},
 	}
-	result = SearchAuction("auction1", []string{"hi", "there"})
+	result, err = SearchAuction("auction1", []string{"hi", "there"})
 	expected = ""
+	assert.NotNilf(t, err, "Should not return an error", err)
 	if result != expected {
 		t.Errorf("'%v' not equal '%v'", result, expected)
 	}
 
-	client = &mockClient{
+	ebid.Client = &mockClient{
 		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body:       ioutil.NopCloser(strings.NewReader("hello world")),
@@ -68,13 +74,14 @@ func TestSearchAuction(t *testing.T) {
 			return nil, nil
 		},
 	}
-	result = SearchAuction("auction1", []string{"hi", "there"})
+	result, err = SearchAuction("auction1", []string{"hi", "there"})
 	expected = ""
+	assert.Nilf(t, err, "Should not return an error", err)
 	if result != expected {
 		t.Errorf("'%v' not equal '%v'", result, expected)
 	}
 
-	client = &mockClient{
+	ebid.Client = &mockClient{
 		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`
@@ -93,15 +100,16 @@ func TestSearchAuction(t *testing.T) {
 			return nil, nil
 		},
 	}
-	result = SearchAuction("auction1", []string{"hi", "there"})
+	result, err = SearchAuction("auction1", []string{"hi", "there"})
 	expected = "<tr><td>Some data</td></tr>"
+	assert.Nilf(t, err, "Should not return an error", err)
 	if result != expected {
 		t.Errorf("'%v' not equal '%v'", result, expected)
 	}
 }
 
 func TestSearchAuctions(t *testing.T) {
-	client = &mockClient{
+	ebid.Client = &mockClient{
 		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`
