@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	kw "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/keywords"
 )
 
 func main1() {
@@ -17,7 +17,7 @@ func main1() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var keywords = ebidlocal.Keywords{"nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom"}
+	var keywords = kw.Keywords{"nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom"}
 
 	t.Execute(os.Stdout, keywords.Search())
 }
