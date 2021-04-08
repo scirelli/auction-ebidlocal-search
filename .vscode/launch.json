@@ -5,12 +5,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Server",
+            "name": "Launch Debug Server",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/cmd/server/",
             "args": ["--config-path=${workspaceFolder}/build/configs/config.json"]
+        },
+        {
+            "name": "Test Current File",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "remotePath": "",
+            "program": "${file}",
+            "env": {},
+            "args": [],
+            "showLog": true
         }
     ]
 }
