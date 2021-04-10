@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-	var l Publisher = New()
+func TestNewWatchlistChange(t *testing.T) {
+	var l WatchlistPublisher = NewWatchlistChange()
 	assert.NotNilf(t, l, "New should return a Listeners", l)
 }
 
-func TestRegister(t *testing.T) {
+func TestWatchlistChangeRegister(t *testing.T) {
 	t.Run("Test registering one listener channel", func(t *testing.T) {
-		var l Publisher = New()
+		var l WatchlistPublisher = NewWatchlistChange()
 		var ch <-chan watchlist.Watchlist
 		var f func() error
 
@@ -23,7 +23,7 @@ func TestRegister(t *testing.T) {
 		assert.NotNilf(t, f, "should return a cancel function", f)
 	})
 	t.Run("Test registering two listener channel", func(t *testing.T) {
-		var l Publisher = New()
+		var l WatchlistPublisher = NewWatchlistChange()
 		var ch <-chan watchlist.Watchlist
 		var f func() error
 
@@ -37,9 +37,9 @@ func TestRegister(t *testing.T) {
 	})
 }
 
-func TestUnregister(t *testing.T) {
+func TestWatchlistChangeUnregister(t *testing.T) {
 	t.Run("Test unregistering one listener channel", func(t *testing.T) {
-		var l Publisher = New()
+		var l WatchlistPublisher = NewWatchlistChange()
 
 		ch, f := l.Register()
 		assert.Nil(t, f())
@@ -49,9 +49,9 @@ func TestUnregister(t *testing.T) {
 	})
 }
 
-func TestPublish(t *testing.T) {
+func TestWatchlistPublish(t *testing.T) {
 	t.Run("Test channel is notified of a change", func(t *testing.T) {
-		var l Publisher = New()
+		var l WatchlistPublisher = NewWatchlistChange()
 		var ch1 <-chan watchlist.Watchlist
 		var wl = watchlist.Watchlist([]string{"a", "b"})
 		var v watchlist.Watchlist
@@ -66,7 +66,7 @@ func TestPublish(t *testing.T) {
 	})
 
 	t.Run("Test multiple channels are notified of a change", func(t *testing.T) {
-		var l Publisher = New()
+		var l WatchlistPublisher = NewWatchlistChange()
 		var wl = watchlist.Watchlist([]string{"a", "b"})
 		var v watchlist.Watchlist
 

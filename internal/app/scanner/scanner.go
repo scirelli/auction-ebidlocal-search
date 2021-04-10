@@ -14,6 +14,7 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner/publish"
 	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
@@ -40,10 +41,11 @@ func New(config Config) *Scanner {
 		template:        t,
 		watchlists:      make(chan string),
 		auctionSearcher: search.AuctionSearchFunc(search.SearchAuctions),
+		changePublsr:    publish.NewStringChange(),
 	}
 }
 
-//Scanner data for scanner bidlocal app
+//Scanner data for scanner ebidlocal app
 type Scanner struct {
 	config          Config
 	logger          *log.Logger
@@ -52,6 +54,7 @@ type Scanner struct {
 	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
 	store           store.Storer
+	changePublsr    publish.StringPublisher
 }
 
 func (e *Scanner) SetOpenAuctions(openAuctions stringiter.Iterable) *Scanner {
@@ -80,6 +83,10 @@ func (e *Scanner) EnqueueWatchlist(list watchlist.Watchlist) {
 	go func() {
 		e.watchlists <- watchlistFile
 	}()
+}
+
+func (e *Scanner) SubscribeForChanges() (readChan <-chan string, unsubscribe func() error) {
+	return e.changePublsr.Subscribe()
 }
 
 // findWatchlists walk the watch list directory on an internval.
@@ -175,7 +182,8 @@ func (e *Scanner) notifyOnChange(watchlistFilePath string) error {
 		e.logger.Error.Println(err)
 		return err
 	}
-	e.logger.Info.Println(id)
+	e.logger.Info.Printf("Watchlist '%s' changed", id)
+	e.changePublsr.Publish(id)
 	return nil
 }
 

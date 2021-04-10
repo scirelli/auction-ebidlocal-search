@@ -10,23 +10,23 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-//New create a new watchlist Publisher.
-func New() Publisher {
+//NewWatchlistChange create a new watchlist Publisher.
+func NewWatchlistChange() WatchlistPublisher {
 	var logger = log.New("Publisher")
-	return &Listeners{
+	return &WatchlistChange{
 		logger: logger,
 	}
 }
 
-//Listeners implements the Notifiers interface.
-type Listeners struct {
+//WatchlistChange implements the Notifiers interface.
+type WatchlistChange struct {
 	listeners []chan<- watchlist.Watchlist
-	mu        sync.Mutex
+	mu        sync.RWMutex
 	logger    *log.Logger
 }
 
 //Register creates a channel to listen for watchlist changes, returns that channel and a function to unregister it.
-func (l *Listeners) Register() (readChan <-chan watchlist.Watchlist, unregister func() error) {
+func (l *WatchlistChange) Register() (readChan <-chan watchlist.Watchlist, unregister func() error) {
 	var watchlistChan = make(chan watchlist.Watchlist)
 	readChan = watchlistChan
 
@@ -39,7 +39,7 @@ func (l *Listeners) Register() (readChan <-chan watchlist.Watchlist, unregister 
 	}
 }
 
-func (l *Listeners) unregister(watchlistChan chan<- watchlist.Watchlist) error {
+func (l *WatchlistChange) unregister(watchlistChan chan<- watchlist.Watchlist) error {
 	defer l.mu.Unlock()
 
 	l.mu.Lock()
@@ -56,9 +56,9 @@ func (l *Listeners) unregister(watchlistChan chan<- watchlist.Watchlist) error {
 }
 
 //Publish publishes the new watch list. Sends to all listening channels, one goroutine each. To help prevent goroutine leaks there is a 50ms timeout context used.
-func (l *Listeners) Publish(wl watchlist.Watchlist) {
-	defer l.mu.Unlock()
-	l.mu.Lock()
+func (l *WatchlistChange) Publish(wl watchlist.Watchlist) {
+	defer l.mu.RUnlock()
+	l.mu.RLock()
 	for _, c := range l.listeners {
 		duration := 50 * time.Millisecond
 		ctx, cancel := context.WithTimeout(context.Background(), duration)
