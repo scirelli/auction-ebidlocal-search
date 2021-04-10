@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
 )
 
 //LoadConfig a config file.
@@ -26,6 +27,7 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 	json.Unmarshal(byteValue, &config)
 
 	scanner.Defaults(&config.Scanner)
+	update.Defaults(&config.Updater)
 
 	return &config, nil
 }
@@ -33,4 +35,5 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 //AppConfig configuration data for entire application.
 type AppConfig struct {
 	Scanner scanner.Config `json:"scanner"`
+	Updater update.Config  `json:"updater"`
 }

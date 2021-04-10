@@ -27,6 +27,7 @@ type WatchlistStore struct {
 
 type StoreConfig struct {
 	WatchlistDir string `json:"watchlistDir"`
+	DataFileName string `json:"dataFileName"`
 }
 
 func (wl *WatchlistStore) SaveWatchlist(ctx context.Context, list watchlist.Watchlist) (ID string, err error) {
@@ -37,7 +38,7 @@ func (wl *WatchlistStore) SaveWatchlist(ctx context.Context, list watchlist.Watc
 }
 
 func (wl *WatchlistStore) LoadWatchlist(ctx context.Context, watchlistID string) (watchlist.Watchlist, error) {
-	return wl.loadWatchlist(filepath.Join(wl.config.WatchlistDir, watchlistID))
+	return wl.loadWatchlist(filepath.Join(wl.config.WatchlistDir, watchlistID, wl.config.DataFileName))
 }
 
 func (wl *WatchlistStore) DeleteWatchlist(ctx context.Context, watchlistID string) error {
@@ -75,7 +76,6 @@ func (wl *WatchlistStore) addWatchlist(list watchlist.Watchlist) error {
 //loadWatchlist loads a watch list from file.
 func (wl *WatchlistStore) loadWatchlist(filePath string) (watchlist.Watchlist, error) {
 	var watchlist watchlist.Watchlist = make([]string, 0)
-
 	jsonFile, err := os.Open(filePath)
 	if err != nil {
 		wl.logger.Error.Println(err)

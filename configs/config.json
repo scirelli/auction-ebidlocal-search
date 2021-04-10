@@ -6,7 +6,13 @@
   },
   "scanner": {
     "contentPath": "",
+    "dataFileName": "data.json",
     "scanIntervalSeconds": 180,
     "asyncRequests": 3
+  },
+  "updater": {
+    "contentPath": "",
+    "batchSize": 3,
+    "runIntervalSeconds": 10
   }
 }

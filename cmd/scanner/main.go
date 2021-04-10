@@ -7,12 +7,14 @@ import (
 	"os"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
 	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
+	storefs "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
 func main() {
-	var logger = log.New("Main")
+	var logger = log.New("Scanner.Main")
 	var configPath *string = flag.String("config-path", os.Getenv("SCANNER_CONFIG"), "path to the config file.")
 	var contentPath *string
 	var appConfig *AppConfig
@@ -33,9 +35,20 @@ func main() {
 	}
 
 	appConfig.Scanner.ContentPath = *contentPath
+	appConfig.Updater.ContentPath = *contentPath
 
 	scan := scanner.New(appConfig.Scanner)
-	scan.SetOpenAuctions(ebidLib.NewAuctionsCache())
-	scan.Scan(ctx)
+	updater := update.New(ctx,
+		storefs.FSStore{
+			storefs.NewWatchlistStore(storefs.StoreConfig{
+				WatchlistDir: appConfig.Updater.WatchlistDir,
+				DataFileName: appConfig.Updater.DataFileName,
+			}, logger),
+		},
+		appConfig.Updater)
+	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())
+	go scan.Scan(ctx)
+	pathsChan, _ := scan.SubscribeForPath()
+	updater.Update(pathsChan)
 	cancel()
 }

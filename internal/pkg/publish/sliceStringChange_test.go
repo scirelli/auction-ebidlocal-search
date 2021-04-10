@@ -3,19 +3,18 @@ package publish
 import (
 	"testing"
 
-	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewWatchlistChange(t *testing.T) {
-	var l WatchlistPublisher = NewWatchlistChange()
+func TestNewSliceStringChange(t *testing.T) {
+	var l SliceStringPublisher = NewSliceStringChange()
 	assert.NotNilf(t, l, "New should return a Listeners", l)
 }
 
-func TestWatchlistChangeRegister(t *testing.T) {
+func TestSliceStringChangeRegister(t *testing.T) {
 	t.Run("Test registering one listener channel", func(t *testing.T) {
-		var l WatchlistPublisher = NewWatchlistChange()
-		var ch <-chan watchlist.Watchlist
+		var l SliceStringPublisher = NewSliceStringChange()
+		var ch <-chan []string
 		var f func() error
 
 		ch, f = l.Register()
@@ -23,8 +22,8 @@ func TestWatchlistChangeRegister(t *testing.T) {
 		assert.NotNilf(t, f, "should return a cancel function", f)
 	})
 	t.Run("Test registering two listener channel", func(t *testing.T) {
-		var l WatchlistPublisher = NewWatchlistChange()
-		var ch <-chan watchlist.Watchlist
+		var l SliceStringPublisher = NewSliceStringChange()
+		var ch <-chan []string
 		var f func() error
 
 		ch, f = l.Register()
@@ -37,9 +36,9 @@ func TestWatchlistChangeRegister(t *testing.T) {
 	})
 }
 
-func TestWatchlistChangeUnregister(t *testing.T) {
+func TestSliceStringChangeUnregister(t *testing.T) {
 	t.Run("Test unregistering one listener channel", func(t *testing.T) {
-		var l WatchlistPublisher = NewWatchlistChange()
+		var l SliceStringPublisher = NewSliceStringChange()
 
 		ch, f := l.Register()
 		assert.Nil(t, f())
@@ -49,12 +48,12 @@ func TestWatchlistChangeUnregister(t *testing.T) {
 	})
 }
 
-func TestWatchlistPublish(t *testing.T) {
+func TestSliceStringPublish(t *testing.T) {
 	t.Run("Test channel is notified of a change", func(t *testing.T) {
-		var l WatchlistPublisher = NewWatchlistChange()
-		var ch1 <-chan watchlist.Watchlist
-		var wl = watchlist.Watchlist([]string{"a", "b"})
-		var v watchlist.Watchlist
+		var l SliceStringPublisher = NewSliceStringChange()
+		var ch1 <-chan []string
+		var wl = []string([]string{"a", "b"})
+		var v []string
 
 		ch1, _ = l.Register()
 
@@ -66,9 +65,9 @@ func TestWatchlistPublish(t *testing.T) {
 	})
 
 	t.Run("Test multiple channels are notified of a change", func(t *testing.T) {
-		var l WatchlistPublisher = NewWatchlistChange()
-		var wl = watchlist.Watchlist([]string{"a", "b"})
-		var v watchlist.Watchlist
+		var l SliceStringPublisher = NewSliceStringChange()
+		var wl = []string([]string{"a", "b"})
+		var v []string
 
 		ch1, _ := l.Register()
 		ch2, _ := l.Register()

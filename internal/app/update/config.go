@@ -1,4 +1,4 @@
-package scanner
+package update
 
 import (
 	"encoding/json"
@@ -31,11 +31,15 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("Scanner:Config:Defaults")
+	var logger = log.New("Update:Config:Defaults")
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
 		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
+	}
+	if config.TemplateDir == "" {
+		config.TemplateDir = "/template"
+		logger.Info.Printf("Defaulting template dir to '%s'\n", config.TemplateDir)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
@@ -44,19 +48,27 @@ func Defaults(config *Config) *Config {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
 		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
-	if config.ScanInterval == 0 {
-		config.ScanInterval = 1
-		logger.Info.Printf("Defaulting scan interval to '%d'\n", config.ScanInterval)
+
+	if config.BatchSize <= 0 {
+		config.BatchSize = 1
+		logger.Info.Printf("Defaulting batch size '%d\n", config.BatchSize)
+	}
+
+	if config.RunIntervalSeconds <= 0 {
+		config.RunIntervalSeconds = 10
+		logger.Info.Printf("Defaulting run interval '%d\n", config.RunIntervalSeconds)
 	}
 
 	return config
 }
 
-//Config for scanner app
+//Config for update app
 type Config struct {
 	//ContentPath all config paths should be relative to the content path.
-	ContentPath  string `json:"contentPath"`
-	DataFileName string `json:"dataFileName"`
-	WatchlistDir string `json:"watchlistDir"`
-	ScanInterval int64  `json:"scanIntervalSeconds"`
+	ContentPath        string `json:"contentPath"`
+	TemplateDir        string `json:"templateDir"`
+	DataFileName       string `json:"dataFileName"`
+	WatchlistDir       string `json:"watchlistDir"`
+	BatchSize          uint64 `json:"batchSize"`
+	RunIntervalSeconds uint64 `json:"runIntervalSeconds"`
 }
