@@ -49,6 +49,10 @@ func main() {
 	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())
 	go scan.Scan(ctx)
 	pathsChan, _ := scan.SubscribeForPath()
-	updater.Update(pathsChan)
+	go updater.Update(pathsChan)
+	ch, _ := updater.SubscribeForChange()
+	for id := range ch {
+		logger.Info.Printf("There was a change %s", id)
+	}
 	cancel()
 }

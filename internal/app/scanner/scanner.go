@@ -38,7 +38,7 @@ func (e *Scanner) Scan(ctx context.Context) error {
 	timeBetweenRuns := time.Duration(e.config.ScanInterval) * time.Second
 	watchlistDir := e.config.WatchlistDir
 
-	e.logger.Info.Printf("Scanning '%s' at interval '%d' minutes", watchlistDir, e.config.ScanInterval)
+	e.logger.Info.Printf("Scanning '%s' at interval '%s'", watchlistDir, timeBetweenRuns)
 	for {
 		startTime := time.Now()
 
