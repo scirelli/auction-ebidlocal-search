@@ -1,9 +1,12 @@
 package ebidlocal
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -85,17 +88,35 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 		return html, err
 	}
 
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	doc, err := goquery.NewDocumentFromResponse(res)
 	if err != nil {
 		log.Println(err)
 		return html, err
 	}
 
-	html, err = doc.Find("#DataTable tbody").First().Html()
+	tbody := doc.Find("#DataTable tbody")
+
+	html, err = tbody.First().Html()
 	if err != nil {
 		return html, err
 	}
 
-	log.Println("Got auction data.")
+	if os.Getenv("DEBUG") != "" {
+		log.Printf("Writing results to '/tmp/SearchAuction_%s-####'", auction)
+		f, _ := ioutil.TempFile("/tmp", fmt.Sprintf("SearchAuction_%s-", auction))
+		f.WriteString(html)
+		f.Close()
+	}
+
+	log.Printf("Got auction data. \n\n%s", "")
 	return html, nil
+}
+
+func removeDynamicData(doc *goquery.Document) *goquery.Document {
+	doc.Find("#DataTable tbody td.highbidder span").Remove()
+	doc.Find("#DataTable tbody td.currentamount span").Remove()
+	doc.Find("#DataTable tbody td.nextbidrequired span, td.nextbidrequired a").Remove()
+	doc.Find("#DataTable tbody td.yourbid span, td.yourbid input").Remove()
+	doc.Find("#DataTable tbody td.yourmaximum span, td.yourmaximum input, td.yourmaximum br").Remove()
+	return doc
 }

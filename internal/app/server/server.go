@@ -107,7 +107,9 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user = NewUser(user.Name)
+	tmp := NewUser(user.Name)
+	tmp.Email = user.Email
+	user = tmp
 	if _, err = s.store.SaveUser(r.Context(), &user); err != nil {
 		defer s.store.DeleteUser(r.Context(), user.ID)
 		respondError(w, http.StatusInternalServerError, "User not created")

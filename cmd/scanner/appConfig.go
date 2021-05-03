@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/notify"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
 )
@@ -28,12 +29,14 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 
 	scanner.Defaults(&config.Scanner)
 	update.Defaults(&config.Updater)
+	notify.DefaultConfig(&config.Notifier)
 
 	return &config, nil
 }
 
 //AppConfig configuration data for entire application.
 type AppConfig struct {
-	Scanner scanner.Config `json:"scanner"`
-	Updater update.Config  `json:"updater"`
+	Scanner  scanner.Config `json:"scanner"`
+	Updater  update.Config  `json:"updater"`
+	Notifier notify.Config  `json:"notifier"`
 }

@@ -45,7 +45,7 @@ func Defaults(config *Config) *Config {
 		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
 	if config.ScanInterval == 0 {
-		config.ScanInterval = 1
+		config.ScanInterval = 10
 		logger.Info.Printf("Defaulting scan interval to '%d'\n", config.ScanInterval)
 	}
 

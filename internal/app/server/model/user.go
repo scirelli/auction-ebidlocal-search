@@ -36,7 +36,7 @@ type User struct {
 }
 
 func (u User) String() string {
-	return fmt.Sprintf("'%s' (%s) %s", u.Name, u.ID, u.UserDir)
+	return fmt.Sprintf("'%s' (%s) %s %s", u.Name, u.ID, u.UserDir, u.Email)
 }
 
 //IsValid validate user data.

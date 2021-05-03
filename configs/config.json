@@ -1,4 +1,6 @@
 {
+  "debug": true,
+  "logLevel": "DEBUG",
   "server": {
     "port": 8282,
     "address": "localhost",
@@ -7,12 +9,15 @@
   "scanner": {
     "contentPath": "",
     "dataFileName": "data.json",
-    "scanIntervalSeconds": 180,
+    "scanIntervalSeconds": 175,
     "asyncRequests": 3
   },
   "updater": {
     "contentPath": "",
-    "batchSize": 3,
-    "runIntervalSeconds": 10
+    "batchSize": 5,
+    "runIntervalSeconds": 350
+  },
+  "notifier": {
+    "serverUrl": "http://ebidlocal.cirelli.org"
   }
 }

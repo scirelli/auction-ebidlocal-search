@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/notify"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
 	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
@@ -37,22 +38,31 @@ func main() {
 	appConfig.Scanner.ContentPath = *contentPath
 	appConfig.Updater.ContentPath = *contentPath
 
+	//scanner produces paths
 	scan := scanner.New(appConfig.Scanner)
+	go scan.Scan(ctx)
+
+	//Updater subscribes to the paths and checks for changes
 	updater := update.New(ctx,
 		storefs.FSStore{
 			storefs.NewWatchlistStore(storefs.StoreConfig{
 				WatchlistDir: appConfig.Updater.WatchlistDir,
 				DataFileName: appConfig.Updater.DataFileName,
-			}, logger),
+			}, log.New("Updater.FSStore")),
 		},
 		appConfig.Updater)
 	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())
-	go scan.Scan(ctx)
 	pathsChan, _ := scan.SubscribeForPath()
 	go updater.Update(pathsChan)
+
+	//Any changes found are passed onto a notifier
 	ch, _ := updater.SubscribeForChange()
-	for id := range ch {
-		logger.Info.Printf("There was a change %s", id)
+	email := notify.EmailNotify{
+		ServerUrl:   appConfig.Notifier.ServerUrl,
+		Logger:      logger,
+		MessageChan: notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch),
 	}
+	email.Send()
+
 	cancel()
 }

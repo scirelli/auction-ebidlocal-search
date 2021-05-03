@@ -47,7 +47,7 @@ requestNewUser: ## Create a new user, for testing
 		--silent \
 		--location \
 		--header "Content-Type: application/json" \
-	  	--data '{"name":"xyz"}' \
+		--data '{"name": "Steve C.", "email": "scirelli+ebidlocal@gmail.com"}' \
 		localhost:8282/user | jq -r '.id' | tee /tmp/user.id
 
 .PHONY: requestNewWatchlist
@@ -57,7 +57,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh"]}' \
+		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -76,6 +76,10 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 test: ## Run all tests
 	@go test ./...
 
+.PHONY: vtest
+vtest: ## Run all tests
+	@go test -v -count=1 ./...
+
 .PHONY: cleanTmpUserId
 cleanTmpUserId: /tmp/user.id ## Remove the generated user.id
 	@rm -rf /tmp/user.id
@@ -83,6 +87,7 @@ cleanTmpUserId: /tmp/user.id ## Remove the generated user.id
 .PHONY: clean
 clean: cleanTmpUserId  ## Remove generated build files
 	@rm -rf ./build
+	@go clean -testcache
 
 # .PHONY: help
 # help: ## Show help message
