@@ -13,7 +13,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-func NewWatchlistStore(config StoreConfig, logger *log.Logger) *WatchlistStore {
+func NewWatchlistStore(config StoreConfig, logger log.Logger) *WatchlistStore {
 	return &WatchlistStore{
 		config: config,
 		logger: logger,
@@ -22,7 +22,7 @@ func NewWatchlistStore(config StoreConfig, logger *log.Logger) *WatchlistStore {
 
 type WatchlistStore struct {
 	config StoreConfig
-	logger *log.Logger
+	logger log.Logger
 }
 
 type StoreConfig struct {
@@ -49,21 +49,21 @@ func (wl *WatchlistStore) DeleteWatchlist(ctx context.Context, watchlistID strin
 func (wl *WatchlistStore) addWatchlist(list watchlist.Watchlist) error {
 	var watchlistDir = filepath.Join(wl.config.WatchlistDir, list.ID())
 
-	wl.logger.Info.Printf("Checking for '%s'\n", watchlistDir)
+	wl.logger.Infof("Checking for '%s'\n", watchlistDir)
 	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
-		wl.logger.Info.Println("Watch list already exists.")
+		wl.logger.Info("Watch list already exists.")
 		return nil
 	}
 
-	wl.logger.Info.Printf("Creating watchlist. '%s'", watchlistDir)
+	wl.logger.Infof("Creating watchlist. '%s'", watchlistDir)
 	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
-		wl.logger.Error.Println(err)
+		wl.logger.Error(err)
 		return err
 	}
 
 	file, err := json.Marshal(list)
 	if err != nil {
-		wl.logger.Error.Println(err)
+		wl.logger.Error(err)
 		if err2 := os.RemoveAll(watchlistDir); err2 != nil {
 			err = fmt.Errorf("%v: %w", err, err2)
 		}
@@ -78,15 +78,15 @@ func (wl *WatchlistStore) loadWatchlist(filePath string) (watchlist.Watchlist, e
 	var watchlist watchlist.Watchlist = make([]string, 0)
 	jsonFile, err := os.Open(filePath)
 	if err != nil {
-		wl.logger.Error.Println(err)
+		wl.logger.Error(err)
 		return watchlist, err
 	}
 	defer jsonFile.Close()
 	dec := json.NewDecoder(jsonFile)
 	if err := dec.Decode(&watchlist); err != nil {
-		wl.logger.Error.Println(err)
+		wl.logger.Error(err)
 		return watchlist, err
 	}
-	wl.logger.Info.Printf("Watch list found '%v'", watchlist)
+	wl.logger.Info("Watch list found '%v'", watchlist)
 	return watchlist, nil
 }

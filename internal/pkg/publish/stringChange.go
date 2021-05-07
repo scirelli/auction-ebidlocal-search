@@ -11,7 +11,7 @@ import (
 
 //New create a new string Publisher.
 func NewStringChange() StringPublisher {
-	var logger = log.New("Publisher")
+	var logger = log.New("Publisher", log.DEFAULT_LOG_LEVEL)
 	return &StringChange{
 		logger: logger,
 	}
@@ -21,7 +21,7 @@ func NewStringChange() StringPublisher {
 type StringChange struct {
 	listeners []chan<- string
 	mu        sync.RWMutex
-	logger    *log.Logger
+	logger    log.Logger
 }
 
 //Subscribe creates a channel to listen for string changes, returns that channel and a function to unsubscribe it.
@@ -66,7 +66,7 @@ func (l *StringChange) Publish(s string) {
 			case c <- s:
 				cancel()
 			case <-ctx.Done():
-				l.logger.Error.Println("Publish timed out.", s)
+				l.logger.Error("Publish timed out.", s)
 			}
 		}(ctx, c, cancel)
 	}

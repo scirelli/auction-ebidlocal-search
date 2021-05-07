@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	var logger = log.New("Scanner.Main")
+	var logger = log.New("Scanner.Main", log.DEFAULT_LOG_LEVEL)
 	var configPath *string = flag.String("config-path", os.Getenv("SCANNER_CONFIG"), "path to the config file.")
 	var contentPath *string
 	var appConfig *AppConfig
@@ -24,15 +24,15 @@ func main() {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		logger.Error.Fatalln(err)
+		logger.Fatal(err)
 	}
-	logger.Info.Printf("Cwd '%s'\n", cwd)
+	logger.Infof("Cwd '%s'\n", cwd)
 	contentPath = flag.String("content-path", ".", fmt.Sprintf("Base path to save user and watchlist data. Default '%s'", "."))
 	flag.Parse()
 
-	logger.Info.Printf("config path '%s'\n", *configPath)
+	logger.Infof("config path '%s'\n", *configPath)
 	if appConfig, err = LoadConfig(*configPath); err != nil {
-		logger.Error.Fatalln(err)
+		logger.Fatal(err)
 	}
 
 	appConfig.Scanner.ContentPath = *contentPath
@@ -48,7 +48,7 @@ func main() {
 			storefs.NewWatchlistStore(storefs.StoreConfig{
 				WatchlistDir: appConfig.Updater.WatchlistDir,
 				DataFileName: appConfig.Updater.DataFileName,
-			}, log.New("Updater.FSStore")),
+			}, log.New("Updater.FSStore", log.DEFAULT_LOG_LEVEL)),
 		},
 		appConfig.Updater)
 	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())

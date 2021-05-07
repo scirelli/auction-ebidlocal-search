@@ -18,7 +18,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
-func New(config Config, store store.Storer, logger *log.Logger) *Server {
+func New(config Config, store store.Storer, logger log.Logger) *Server {
 	var server = Server{
 		config: config,
 		logger: logger,
@@ -26,7 +26,7 @@ func New(config Config, store store.Storer, logger *log.Logger) *Server {
 	}
 
 	if url, err := url.Parse(fmt.Sprintf("%s:%d", config.Address, config.Port)); err != nil {
-		server.logger.Error.Fatalln(err)
+		server.logger.Fatal(err)
 	} else {
 		server.addr = url
 	}
@@ -37,15 +37,15 @@ func New(config Config, store store.Storer, logger *log.Logger) *Server {
 }
 
 type Server struct {
-	logger *log.Logger
+	logger log.Logger
 	addr   *url.URL
 	store  store.Storer
 	config Config
 }
 
 func (s *Server) Run() {
-	s.logger.Info.Printf("Listening on %s\n", s.addr.String())
-	s.logger.Error.Fatal(http.ListenAndServe(s.addr.String(), nil))
+	s.logger.Infof("Listening on %s\n", s.addr.String())
+	s.logger.Fatal(http.ListenAndServe(s.addr.String(), nil))
 }
 
 func (s *Server) registerHTTPHandlers() {
@@ -113,15 +113,15 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	if _, err = s.store.SaveUser(r.Context(), &user); err != nil {
 		defer s.store.DeleteUser(r.Context(), user.ID)
 		respondError(w, http.StatusInternalServerError, "User not created")
-		s.logger.Error.Printf("Failed to create user %s", user.ID)
+		s.logger.Errorf("Failed to create user %s", user.ID)
 		return
 	}
 	if _, err = s.createUserSpace(&user); err != nil {
 		respondError(w, http.StatusInternalServerError, "User not created")
-		s.logger.Error.Printf("Failed to create user %s", user.ID)
+		s.logger.Errorf("Failed to create user %s", user.ID)
 		return
 	}
-	s.logger.Info.Printf("User created '%s'\n", user.ID)
+	s.logger.Infof("User created '%s'\n", user.ID)
 
 	w.Header().Set("Location", fmt.Sprintf("/user/%s/", url.PathEscape(user.ID)))
 	respondJSON(w, http.StatusCreated, user)
@@ -149,7 +149,7 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	s.logger.Info.Printf("Create watch list called '%s'", wl.Name)
+	s.logger.Infof("Create watch list called '%s'", wl.Name)
 	w.Header().Set("Location", fmt.Sprintf("/user/%s/watchlist/%s", url.PathEscape(userID), url.PathEscape(listID)))
 	respondJSON(w, http.StatusCreated, struct {
 		WatchlistID string `json:"watchlistID"`
@@ -160,7 +160,7 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 	var userDir string = filepath.Join(s.config.UserDir, u.ID)
 
 	if err := os.MkdirAll(userDir, 0775); err != nil {
-		s.logger.Error.Println(err)
+		s.logger.Error(err)
 		return "", err
 	}
 

@@ -10,13 +10,13 @@ import (
 )
 
 type EmailNotify struct {
-	Logger      *log.Logger
+	Logger      log.Logger
 	MessageChan <-chan NotificationMessage
 	ServerUrl   string
 }
 
 func (en *EmailNotify) Notify(message NotificationMessage) error {
-	en.Logger.Info.Printf("Message received trying to email... %s", message)
+	en.Logger.Infof("Message received trying to email... %s", message)
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {
 			if wlID == message.WatchlistID {

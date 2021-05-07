@@ -31,22 +31,22 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("Scanner:Config:Defaults")
+	var logger = log.New("Scanner:Config:Defaults", log.DEFAULT_LOG_LEVEL)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
-		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
+		logger.Infof("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
 	}
 	if config.WatchlistDir == "" {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
-		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
+		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
 	if config.ScanInterval == 0 {
 		config.ScanInterval = 10
-		logger.Info.Printf("Defaulting scan interval to '%d'\n", config.ScanInterval)
+		logger.Infof("Defaulting scan interval to '%d'\n", config.ScanInterval)
 	}
 
 	return config

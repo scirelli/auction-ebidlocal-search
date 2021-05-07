@@ -87,7 +87,7 @@ func Test_findAllUsersDataFiles(t *testing.T) {
 	for _, test := range dataFixture() {
 		t.Run(test.Name, func(t *testing.T) {
 			var e WatchlistConvertData = WatchlistConvertData{
-				logger: log.New("email_test"),
+				logger: log.New("email_test", log.DEFAULT_LOG_LEVEL),
 				config: config,
 			}
 			var expected []string
@@ -109,7 +109,7 @@ func Test_allUsers(t *testing.T) {
 	for _, test := range dataFixture() {
 		t.Run(test.Name, func(t *testing.T) {
 			var e WatchlistConvertData = WatchlistConvertData{
-				logger: log.New("email_test"),
+				logger: log.New("email_test", log.DEFAULT_LOG_LEVEL),
 				config: config,
 			}
 			var expected []string
@@ -131,7 +131,7 @@ func TestConvert(t *testing.T) {
 	for _, test := range dataFixture() {
 		t.Run(test.Name, func(t *testing.T) {
 			var e WatchlistConvertData = WatchlistConvertData{
-				logger: log.New("email_test"),
+				logger: log.New("email_test", log.DEFAULT_LOG_LEVEL),
 				config: config,
 			}
 

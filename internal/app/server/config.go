@@ -32,22 +32,22 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("ServerConfig")
+	var logger = log.New("ServerConfig", log.DEFAULT_LOG_LEVEL)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
 	}
 	if config.UserDir == "" {
 		config.UserDir = filepath.Join(config.ContentPath, "web", "user")
-		logger.Info.Printf("Defaulting UserDir to '%s'\n", config.UserDir)
+		logger.Infof("Defaulting UserDir to '%s'\n", config.UserDir)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
-		logger.Info.Printf("Defaulting DataFileName to '%s'\n", config.DataFileName)
+		logger.Infof("Defaulting DataFileName to '%s'\n", config.DataFileName)
 	}
 	if config.WatchlistDir == "" {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
-		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
+		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
 
 	return config

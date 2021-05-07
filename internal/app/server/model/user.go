@@ -48,7 +48,7 @@ func generateID() (string, error) {
 	var userID = uuid.New()
 	bytes, err := userID.MarshalBinary()
 	if err != nil {
-		log.New("user").Error.Println(err)
+		log.New("user", log.DEFAULT_LOG_LEVEL).Error(err)
 		id := strconv.Itoa(defaultIDGen.NewID())
 		return id, err
 	}

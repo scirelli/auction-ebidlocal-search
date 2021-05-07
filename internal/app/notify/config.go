@@ -31,7 +31,7 @@ func LoadConfig(fileName string) (*Config, error) {
 }
 
 func DefaultConfig(config *Config) *Config {
-	var logger = log.New("Notifier:Config:Defaults")
+	var logger = log.New("Notifier:Config:Defaults", log.DEFAULT_LOG_LEVEL)
 
 	if config == nil {
 		config = &Config{}
@@ -39,22 +39,22 @@ func DefaultConfig(config *Config) *Config {
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
-		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
+		logger.Infof("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
 	}
 	if config.UserDir == "" {
 		config.UserDir = filepath.Join(config.ContentPath, "web", "user")
-		logger.Info.Printf("Defaulting userDir dir to '%s'\n", config.UserDir)
+		logger.Infof("Defaulting userDir dir to '%s'\n", config.UserDir)
 	}
 	if config.ServerUrl == "" {
 		config.ServerUrl = "http://localhost:8282"
-		logger.Info.Printf("Defaulting ServerUrl to '%s'\n", config.ServerUrl)
+		logger.Infof("Defaulting ServerUrl to '%s'\n", config.ServerUrl)
 	}
 	if config.Type == "" {
 		config.Type = "email"
-		logger.Info.Printf("Defaulting Type to '%s'\n", config.Type)
+		logger.Infof("Defaulting Type to '%s'\n", config.Type)
 	}
 
 	return config

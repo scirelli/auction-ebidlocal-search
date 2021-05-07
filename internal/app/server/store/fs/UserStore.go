@@ -12,7 +12,7 @@ import (
 )
 
 //NewUserStore constructor for the UserStore
-func NewUserStore(baseUserDir string, dataFileName string, log *log.Logger) *UserStore {
+func NewUserStore(baseUserDir string, dataFileName string, log log.Logger) *UserStore {
 	return &UserStore{
 		baseUserDir:  baseUserDir,
 		dataFileName: dataFileName,
@@ -23,21 +23,21 @@ func NewUserStore(baseUserDir string, dataFileName string, log *log.Logger) *Use
 type UserStore struct {
 	baseUserDir  string
 	dataFileName string
-	logger       *log.Logger
+	logger       log.Logger
 }
 
 func (s *UserStore) SaveUser(ctx context.Context, u *User) (string, error) {
 	var userDir string = filepath.Join(s.baseUserDir, u.ID)
 
-	s.logger.Info.Printf("Creating user '%s' at '%s'\n", u.ID, userDir)
+	s.logger.Infof("Creating user '%s' at '%s'\n", u.ID, userDir)
 	if err := os.MkdirAll(userDir, 0775); err != nil {
-		s.logger.Error.Println(err)
+		s.logger.Error(err)
 		return "", err
 	}
 
 	file, err := json.Marshal(u)
 	if err != nil {
-		s.logger.Error.Println(err)
+		s.logger.Error(err)
 		return "", err
 	}
 	return u.ID, ioutil.WriteFile(filepath.Join(userDir, s.dataFileName), file, 0644)
@@ -47,21 +47,21 @@ func (s *UserStore) LoadUser(ctx context.Context, userID string) (*User, error) 
 	var userDataFile string = filepath.Join(s.baseUserDir, userID, s.dataFileName)
 
 	if _, err := os.Stat(userDataFile); os.IsNotExist(err) {
-		s.logger.Info.Println("User does not exist")
+		s.logger.Info("User does not exist")
 		return nil, err
 	}
 
 	var usr User
 	jsonFile, err := os.Open(userDataFile)
 	if err != nil {
-		s.logger.Error.Println(err)
+		s.logger.Error(err)
 		return nil, err
 	}
 	defer jsonFile.Close()
 
 	dec := json.NewDecoder(jsonFile)
 	if err := dec.Decode(&usr); err != nil {
-		s.logger.Error.Println(err)
+		s.logger.Error(err)
 		return nil, err
 	}
 

@@ -13,10 +13,27 @@ const (
 	Info
 	Warn
 	Error
+	Fatal
+	Panic
 )
 
+var DEFAULT_LOG_LEVEL LogLevel
+
 func (l LogLevel) String() string {
-	return [...]string{"Debug", "Info", "Warn", "Error"}[l]
+	return [...]string{"Debug", "Info", "Warn", "Error", "Fatal", "Panic"}[l]
+}
+
+func GetLevel(name string) LogLevel {
+	return map[string]LogLevel{"Debug": Debug, "Info": Info, "Warn": Warn, "Error": Error, "Fatal": Fatal, "Panic": Panic}[name]
+}
+
+func init() {
+	var env string = os.Getenv("LOGLEVEL")
+	if env == "" {
+		env = "Error"
+	}
+
+	DEFAULT_LOG_LEVEL = GetLevel(env)
 }
 
 //Logger logger interface, loggers check the env for LOGLEVEL flags. If LOGLEVEL env variable is set then that level and above will be logged. Fatal and Panic always fire.

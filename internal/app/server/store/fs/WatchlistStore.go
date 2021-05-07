@@ -11,7 +11,7 @@ import (
 )
 
 //NewWatchlistStore adapter for Ebidlocal store.
-func NewWatchlistStore(store ebidstore.Storer, logger *log.Logger) *EbidlocalAsWatchlistStore {
+func NewWatchlistStore(store ebidstore.Storer, logger log.Logger) *EbidlocalAsWatchlistStore {
 	return &EbidlocalAsWatchlistStore{
 		store:  store,
 		logger: logger,
@@ -21,7 +21,7 @@ func NewWatchlistStore(store ebidstore.Storer, logger *log.Logger) *EbidlocalAsW
 //EbidlocalAsWatchlistStore adapter for Ebidlocal store.
 type EbidlocalAsWatchlistStore struct {
 	store  ebidstore.Storer
-	logger *log.Logger
+	logger log.Logger
 }
 
 func (wl *EbidlocalAsWatchlistStore) SaveWatchlist(ctx context.Context, list *model.Watchlist) (ID string, err error) {

@@ -11,7 +11,7 @@ import (
 
 //NewSliceStringChange create a new SliceStringChange Publisher.
 func NewSliceStringChange() SliceStringPublisher {
-	var logger = log.New("Publisher")
+	var logger = log.New("Publisher", log.DEFAULT_LOG_LEVEL)
 	return &SliceStringChange{
 		logger: logger,
 	}
@@ -21,7 +21,7 @@ func NewSliceStringChange() SliceStringPublisher {
 type SliceStringChange struct {
 	listeners []chan<- []string
 	mu        sync.RWMutex
-	logger    *log.Logger
+	logger    log.Logger
 }
 
 //Register creates a channel to listen for slice string changes, returns that channel and a function to unregister it.
@@ -66,7 +66,7 @@ func (l *SliceStringChange) Publish(wl []string) {
 			case c <- wl:
 				cancel()
 			case <-ctx.Done():
-				l.logger.Error.Println("Publish timed out.", wl)
+				l.logger.Error("Publish timed out.", wl)
 			}
 		}(ctx, c, cancel)
 	}

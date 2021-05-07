@@ -12,7 +12,7 @@ import (
 
 //New constructor for scanner app. This app creates new watch lists on disk and has a scanner to keep them up-to-date.
 func New(config Config) *Scanner {
-	var logger = log.New("Scanner.New")
+	var logger = log.New("Scanner.New", log.DEFAULT_LOG_LEVEL)
 
 	return &Scanner{
 		config:       config,
@@ -24,7 +24,7 @@ func New(config Config) *Scanner {
 //Scanner data for scanner ebidlocal app
 type Scanner struct {
 	config       Config
-	logger       *log.Logger
+	logger       log.Logger
 	changePublsr publish.StringPublisher
 }
 
@@ -38,17 +38,17 @@ func (s *Scanner) Scan(ctx context.Context) error {
 	timeBetweenRuns := time.Duration(s.config.ScanInterval) * time.Second
 	watchlistDir := s.config.WatchlistDir
 
-	s.logger.Info.Printf("Scanning '%s' at interval '%s'", watchlistDir, timeBetweenRuns)
+	s.logger.Infof("Scanning '%s' at interval '%s'", watchlistDir, timeBetweenRuns)
 	for {
 		startTime := time.Now()
 
 		if err := filepath.Walk(watchlistDir, s.walkCalback); err != nil {
-			s.logger.Error.Printf("Error walking the path %q: %v\n", watchlistDir, err)
+			s.logger.Errorf("Error walking the path %q: %v\n", watchlistDir, err)
 		}
 
 		select {
 		case <-ctx.Done():
-			s.logger.Info.Println("Scanner stopped.")
+			s.logger.Info("Scanner stopped.")
 			return nil
 		default:
 		}
@@ -60,11 +60,11 @@ func (s *Scanner) Scan(ctx context.Context) error {
 
 func (s *Scanner) walkCalback(path string, info os.FileInfo, err error) error {
 	if err != nil {
-		s.logger.Info.Printf("prevent panic by handling failure accessing a path %q: %v\n", path, err)
+		s.logger.Infof("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 		return err
 	}
 	if info.Name() == s.config.DataFileName {
-		s.logger.Info.Printf("Found file: %q\n", path)
+		s.logger.Infof("Found file: %q\n", path)
 		s.changePublsr.Publish(path)
 	}
 

@@ -31,32 +31,32 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("Update:Config:Defaults")
+	var logger = log.New("Update:Config:Defaults", log.DEFAULT_LOG_LEVEL)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
-		logger.Info.Printf("Defaulting content path dir to '%s'\n", config.ContentPath)
+		logger.Infof("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
 	if config.TemplateDir == "" {
 		config.TemplateDir = "/template"
-		logger.Info.Printf("Defaulting template dir to '%s'\n", config.TemplateDir)
+		logger.Infof("Defaulting template dir to '%s'\n", config.TemplateDir)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
 	}
 	if config.WatchlistDir == "" {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
-		logger.Info.Printf("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
+		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
 
 	if config.BatchSize <= 0 {
 		config.BatchSize = 1
-		logger.Info.Printf("Defaulting batch size '%d\n", config.BatchSize)
+		logger.Infof("Defaulting batch size '%d\n", config.BatchSize)
 	}
 
 	if config.RunIntervalSeconds <= 0 {
 		config.RunIntervalSeconds = 10
-		logger.Info.Printf("Defaulting run interval '%d\n", config.RunIntervalSeconds)
+		logger.Infof("Defaulting run interval '%d\n", config.RunIntervalSeconds)
 	}
 
 	return config

@@ -28,7 +28,7 @@ type Updater interface {
 
 //New constructor for updater app. This app creates new watch lists on disk and has a updater to keep them up-to-date.
 func New(ctx context.Context, watchlistStore store.Storer, config Config) *Update {
-	var logger = log.New("Update")
+	var logger = log.New("Update", log.DEFAULT_LOG_LEVEL)
 
 	t, err := template.New("template.html.tmpl").Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
@@ -37,7 +37,7 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 	}).ParseFiles(filepath.Join("./", "assets", "templates", "template.html.tmpl"))
 
 	if err != nil {
-		logger.Error.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return &Update{
@@ -55,7 +55,7 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 //Update data
 type Update struct {
 	config          Config
-	logger          *log.Logger
+	logger          log.Logger
 	template        *template.Template
 	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
@@ -76,7 +76,7 @@ func (u *Update) Update(watchlistFilePaths <-chan string) error {
 	go u.batchUpdateWatchlists()
 	for path := range watchlistFilePaths {
 		if err := u.EnqueueWatchlistPath(path); err != nil {
-			u.logger.Error.Printf("%s", err)
+			u.logger.Errorf("%s", err)
 			return err
 		}
 	}
@@ -93,7 +93,7 @@ func (u *Update) SubscribeForChange() (<-chan string, func() error) {
 func (u *Update) EnqueueWatchlistPath(watchlistFilePath string) error {
 	var id string
 	id = u.watchlistIDFromPath(filepath.Dir(watchlistFilePath))
-	u.logger.Info.Printf("Calling Enqueueing watchlist id: '%s'; path: '%s'", id, watchlistFilePath)
+	u.logger.Infof("Calling Enqueueing watchlist id: '%s'; path: '%s'", id, watchlistFilePath)
 	u.EnqueueWatchlistID(id)
 	return nil
 }
@@ -107,7 +107,7 @@ func (u *Update) EnqueueWatchlistID(listID string) {
 
 //batchUpdateWatchlists Batch update watch lists. Makes x requests at a time.
 func (u *Update) batchUpdateWatchlists() {
-	u.logger.Info.Println("Batch Updates started.")
+	u.logger.Info("Batch Updates started.")
 	var runInterval time.Duration = time.Duration(u.config.RunIntervalSeconds) * time.Second
 	for {
 		var wg sync.WaitGroup
@@ -132,23 +132,23 @@ func (u *Update) batchUpdateWatchlists() {
 
 //updateWathclistResults loads a watch list, makes a request to ebid for new search results.
 func (u *Update) updateWatchlistResults(id string) error {
-	u.logger.Info.Printf("Updating watch list id: '%s'", id)
+	u.logger.Infof("Updating watch list id: '%s'", id)
 
 	watchlist, err := u.store.LoadWatchlist(context.Background(), id)
 	if err != nil {
-		u.logger.Error.Println(err)
+		u.logger.Error(err)
 		return err
 	}
 
 	if file, err := os.Create(u.watchlistDataFilePathFromID(id)); err == nil {
 		defer file.Close()
 		if err := u.template.Execute(file, u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions)); err != nil {
-			u.logger.Error.Println(err)
+			u.logger.Error(err)
 			return err
 		}
-		u.logger.Info.Println("Generate file ID")
+		u.logger.Info("Generate file ID")
 	} else {
-		u.logger.Error.Println(err)
+		u.logger.Error(err)
 		return err
 	}
 
@@ -160,7 +160,7 @@ func (u *Update) notifyOnChange(watchlistID string) {
 	var err error
 
 	if resultID, err = u.getResultID(u.watchlistDataFilePathFromID(watchlistID)); err != nil {
-		u.logger.Error.Printf("Failed to check for changes. '%s'", err)
+		u.logger.Errorf("Failed to check for changes. '%s'", err)
 		return
 	}
 
@@ -169,19 +169,19 @@ func (u *Update) notifyOnChange(watchlistID string) {
 		shaLength := 40
 		buf := make([]byte, shaLength)
 		if cnt, err := file.Read(buf); err != nil && err != io.EOF {
-			u.logger.Error.Printf("Bytes read: '%d'; '%s'", cnt, err)
+			u.logger.Errorf("Bytes read: '%d'; '%s'", cnt, err)
 			return
 		}
 		if resultID != string(buf) {
-			u.logger.Info.Printf("There was a change '%s' != '%s'", resultID, string(buf))
+			u.logger.Infof("There was a change '%s' != '%s'", resultID, string(buf))
 			if cnt, err := file.WriteAt([]byte(resultID), 0); err != nil || cnt != len(resultID) {
-				u.logger.Error.Printf("Bytes written: '%d'; '%s'", cnt, err)
+				u.logger.Errorf("Bytes written: '%d'; '%s'", cnt, err)
 				return
 			}
 			u.changePublsr.Publish(watchlistID)
 		}
 	} else {
-		u.logger.Error.Println(err)
+		u.logger.Error(err)
 		return
 	}
 }
@@ -200,7 +200,7 @@ func (u *Update) watchlistHashFilePathFromID(watchlistID string) string {
 
 func (u *Update) watchlistIDFromPath(watchlistFilePath string) string {
 	_, file := filepath.Split(watchlistFilePath)
-	u.logger.Info.Printf("Getting id from path '%s' - '%s'", watchlistFilePath, file)
+	u.logger.Infof("Getting id from path '%s' - '%s'", watchlistFilePath, file)
 	return file
 }
 

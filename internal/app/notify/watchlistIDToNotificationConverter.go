@@ -21,13 +21,13 @@ func NewWatchlistConvertData(config Config) *WatchlistConvertData {
 	DefaultConfig(&config)
 
 	return &WatchlistConvertData{
-		logger: log.New("WatchlistConvertData"),
+		logger: log.New("WatchlistConvertData", log.DEFAULT_LOG_LEVEL),
 		config: config,
 	}
 }
 
 type WatchlistConvertData struct {
-	logger *log.Logger
+	logger log.Logger
 	config Config
 }
 
@@ -41,13 +41,13 @@ func (e *WatchlistConvertData) Convert(watchlistIDChan <-chan string) <-chan Not
 		for wlid := range watchlistIDChan {
 			select {
 			case <-ticker.C:
-				e.logger.Info.Println("Updating user list")
+				e.logger.Info("Updating user list")
 				watchlistToUsers = e.createUserCache()
 			default:
 			}
 
 			for _, user := range watchlistToUsers[wlid] {
-				e.logger.Info.Printf("Sending notification message: %s, about watch list '%s'", user, wlid)
+				e.logger.Infof("Sending notification message: %s, about watch list '%s'", user, wlid)
 				messageChan <- NotificationMessage{
 					User:        user,
 					WatchlistID: wlid,
@@ -62,22 +62,22 @@ func (e *WatchlistConvertData) Convert(watchlistIDChan <-chan string) <-chan Not
 }
 
 func (e *WatchlistConvertData) findAllUsersDataFiles() []string {
-	e.logger.Info.Printf("Searching for users")
+	e.logger.Infof("Searching for users")
 	var userPaths []string
 
 	if err := filepath.Walk(e.config.UserDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			e.logger.Info.Printf("Failure accessing a path %q: %v\n", path, err)
+			e.logger.Infof("Failure accessing a path %q: %v\n", path, err)
 			return err
 		}
 		if info.Name() == e.config.DataFileName {
-			e.logger.Info.Printf("Found file: %q\n", path)
+			e.logger.Infof("Found file: %q\n", path)
 			userPaths = append(userPaths, path)
 		}
 
 		return nil
 	}); err != nil {
-		e.logger.Error.Printf("Error walking the path %q: %v\n", e.config.UserDir, err)
+		e.logger.Errorf("Error walking the path %q: %v\n", e.config.UserDir, err)
 	}
 
 	return userPaths
@@ -87,9 +87,9 @@ func (e *WatchlistConvertData) allUsers() (userIds []string) {
 	var files []os.DirEntry
 	var err error
 
-	e.logger.Info.Printf("Searching for users")
+	e.logger.Infof("Searching for users")
 	if files, err = os.ReadDir(e.config.UserDir); err != nil {
-		e.logger.Error.Printf("Error walking the path %q: %v\n", e.config.UserDir, err)
+		e.logger.Errorf("Error walking the path %q: %v\n", e.config.UserDir, err)
 		return userIds
 	}
 	for _, file := range files {
@@ -108,7 +108,7 @@ func (e *WatchlistConvertData) createUserCache() map[string][]*model.User {
 	for _, userID := range e.allUsers() {
 		user, err := userStore.LoadUser(context.Background(), userID)
 		if err != nil {
-			e.logger.Warn.Printf("Skipping user '%s'", userID)
+			e.logger.Warnf("Skipping user '%s'", userID)
 			continue
 		}
 		for _, listIDs := range user.Watchlists {
