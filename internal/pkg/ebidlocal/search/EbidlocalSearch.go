@@ -93,7 +93,14 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 		log.Println(err)
 		return html, err
 	}
+	if os.Getenv("DEBUG") != "" {
+		f, _ := ioutil.TempFile("/tmp", fmt.Sprintf("doc_%s_", auction))
+		d, _ := doc.Html()
+		f.WriteString(d)
+		f.Close()
+	}
 
+	fullyQualifyLinks(doc)
 	tbody := doc.Find("#DataTable tbody")
 
 	html, err = tbody.First().Html()
@@ -110,6 +117,15 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 
 	log.Printf("Got auction data. \n\n%s", "")
 	return html, nil
+}
+
+func fullyQualifyLinks(doc *goquery.Document) *goquery.Document {
+	doc.Find("#DataTable tbody tr td.item a").Each(func(i int, s *goquery.Selection) {
+		if partial, exists := s.Attr("href"); exists {
+			s.SetAttr("href", "https://auction.ebidlocal.com"+partial)
+		}
+	})
+	return doc
 }
 
 func removeDynamicData(doc *goquery.Document) *goquery.Document {

@@ -1,0 +1,552 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
+<title>eBIDLOCAL.com ~ OnLine Auctions &amp; Estate Sales &amp; Liquidations ~ Local Assets, Global Marketing ~ Helping Sellers Since 1985, VAAF#777, NCAF#9197</title>
+<style>#DataTableDesc{width:40%;}</style>
+<link rel="stylesheet" href="/maxanet.css" type="text/css"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="/css/w3.css"/>
+<link rel="stylesheet" href="/css/responsive.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="/css/responsive-switch.min.js"></script>
+<link rel="icon" type="image/png" href="https://www.ebidlocal.com/wp-content/uploads/2015/04/favicon.ico"/>
+<link rel="apple-touch-icon" sizes="144x144" href="https://www.ebidlocal.com/wp-content/uploads/2015/04/apple-icon-144x144.png"/>
+<link rel="apple-touch-icon" sizes="114x114" href="https://www.ebidlocal.com/wp-content/uploads/2015/04/apple-icon-114x114.png"/>
+<link rel="apple-touch-icon" sizes="72x72" href="https://www.ebidlocal.com/wp-content/uploads/2015/04/apple-icon-72x72.png"/>
+<link rel="apple-touch-icon" href="https://www.ebidlocal.com/wp-content/uploads/2015/04/apple-icon-57x57.png"/>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-15939558-1']);
+  _gaq.push(['_setDomainName', 'ebidlocal.com']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type =
+'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+<!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1602025133414454');
+fbq('track', 'PageView');
+</script>
+<noscript>
+<img height="1" width="1"
+src="https://www.facebook.com/tr?id=1602025133414454&ev=PageView
+&noscript=1"/>
+</noscript>
+<!-- End Facebook Pixel Code -->
+<!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window,document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+
+ fbq('init', '150441325645831'); 
+fbq('track', 'PageView');
+</script>
+<noscript>
+ <img height="1" width="1" 
+src="https://www.facebook.com/tr?id=150441325645831&ev=PageView
+&noscript=1"/>
+</noscript>
+<!-- End Facebook Pixel Code -->
+</head>
+<body bgcolor="#ffffff" onmousemove="ResetCounter();"><!--
+Copyright 2019, Maxanet Auction Software LLC
+-->
+<form name="arefresh">
+<input type="hidden" name="client" value="staples"/>
+<input type="hidden" name="auto_refresh" value="1"/>
+<input type="hidden" name="baseseconds" value="1620619200"/>
+<input type="hidden" name="currentsecond" value="35014"/>
+<input type="hidden" name="arvalue" value="30000"/>
+<input type="hidden" name="sarval" value="0"/>
+<input type="hidden" name="scrollval" value=""/>
+</form>		
+<script language="JavaScript" type="text/javascript">;
+<!--;
+function subform(rnum){
+	document.rform.rnum.value=rnum;
+	document.rform.scrolly.value = (document.all)?document.body.scrollTop:window.pageYOffset; 
+	document.rform.submit();
+}
+
+function subwatchform(rnum){
+	document.rform.rnum.value=rnum;
+	document.rform.watchitem.value=rnum;
+	document.rform.scrolly.value = (document.all)?document.body.scrollTop:window.pageYOffset; 
+	document.rform.submit();
+}
+
+function subbidform(rnum){
+	var df = 0;
+	for (var i = 0; i < document.bidform.elements.length; i++) {
+		var e = document.bidform.elements[i];
+		if (e.type == "text" && e.value != "") 
+		{df = 1; break;}
+	} 
+	if (df == 0)
+	{
+		alert ("No bid amount entered");
+		return;
+	}
+	document.bidform.autoconfirm.value=rnum;
+	document.bidform.submit();
+}
+
+function subfillform(rnum,bidamount){
+	var rmax = "m";
+	rmax += rnum;
+	for (var i = 0; i < document.bidform.elements.length; i++) {
+		var e = document.bidform.elements[i];
+		if (e.name == rnum) {
+			if (e.value == "")
+			{e.value = bidamount;}
+			else
+			{e.value = "";}
+			break;		
+		} 
+		if (e.name == rmax) {
+			if (e.value == "")
+			{e.value = bidamount;}
+			else
+			{e.value = "";}
+			break;		
+		} 
+	} 
+}
+
+function subbnpw(){
+	var df = 0;
+	for (var i = 0; i < document.bidform.elements.length; i++) {
+		var e = document.bidform.elements[i];
+		if (e.type == "text" && e.value != "") 
+		{df = 1; break;}
+	} 
+	if (df == 0)
+	{
+		alert ("No bid amount entered");
+		return;
+	}
+	alert ("Enter your bidding number and password to continue");
+	window.location = '#pgbottom';
+}
+
+function searchtest()
+{
+	if (document.searchform.atype.value == 'EVENT')
+	{
+		return true;
+	}
+	document.searchform1.atype.value = document.searchform.atype.value;
+	document.searchform1.stype.value = document.searchform.stype.value;
+	document.searchform1.keyword.value = document.searchform.keyword.value;
+	document.searchform1.submit();
+	return false;
+}
+
+function npagef()
+{
+	document.viewform.nwpage.value=document.viewform.npage.value; 
+	document.viewform.submit();
+}
+
+function ppagef()
+{
+	document.viewform.nwpage.value=document.viewform.ppage.value; 
+	document.viewform.submit();
+}
+
+function replaceText(textId, text)
+{
+  if (document.getElementById)
+  {
+    var textval=document.getElementById(textId);
+    if (textval)
+    {
+      if (textval.value)
+      {
+	textval.value=text;
+      }
+      else //if (textval.innerHTML)
+      {
+	textval.innerHTML=text;
+      }
+    }
+  }
+}
+
+
+
+//arefresh
+var timers = [];
+var tdifference; 
+var tcounter = 0;
+
+function ResetCounter() {
+  tcounter = 0;
+}
+
+function RefreshBids() {
+  tcounter++;
+  if (tcounter == 50) {
+    clearInterval(RefreshBids);
+    alert("Auto-refresh has been halted");
+    document.rform.submit();
+  }  
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function () {
+    if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+      if (xmlhttp.status == 200) {
+        var data = JSON.parse(xmlhttp.responseText);
+        const keys = Object.keys(data.items);
+        for (const item of keys) {
+          const details = document.getElementById(item);
+          if (details != null) {
+            var childElements = details.children;
+            const nbsp = '&nbsp;';
+            for (var k = 0; k < childElements.length; k++) {
+              if (childElements[k].classList.contains("bids")) {
+                var span_id = item + "_bids";
+                span = document.getElementById(span_id);
+                span.innerHTML = data.items[item].bids;
+              }
+              else if (childElements[k].classList.contains("highbidder")) {
+                var span_id = item + "_highbidder";
+                span = document.getElementById(span_id);
+                span.innerHTML = data.items[item].high_bidder;
+              }
+              else if (childElements[k].classList.contains("currentamount")) {
+                var span_id = item + "_currentprice";
+                span = document.getElementById(span_id);
+                span.innerHTML = data.items[item].current_price;
+              }
+              else if (childElements[k].classList.contains("nextbidrequired")) {
+                var span_id = item + "_nextrequired";
+                var currentstatus = data.items[item].status;
+                span = document.getElementById(span_id);
+                span.innerHTML = data.items[item].next_required;
+                if (data.items[item].next_required != "&nbsp;" && data.items[item].next_required != " ") {
+                  var a1 = "<a href=javascript:subfillform('";
+                  var a2 = "','";
+                  var a3 = "')>";
+                  var a4 = "</a>";
+                  var a5 = a1 + item + a2 + data.items[item].next_required + a3 + data.items[item].next_required + a4;
+                  span.innerHTML = a5;
+                }
+                if (currentstatus == "ended") {
+                  span.innerHTML = nbsp;
+                }
+              }
+              else if (childElements[k].classList.contains("yourbid")) {
+                var span_id = item + "_yourbid";
+                var currentstatus = data.items[item].status;
+                span = document.getElementById(span_id);
+                if (currentstatus == "ended") {
+                  span.innerHTML = nbsp;
+                }
+              }
+              else if (childElements[k].classList.contains("yourmaximum")) {
+                var span_id = item + "_yourmax";
+                var currentstatus = data.items[item].status;
+                span = document.getElementById(span_id);
+                if (currentstatus == "ended") {
+                  span.innerHTML = nbsp;
+                }
+                var span_id = item + "_status";
+                span = document.getElementById(span_id);
+                span.innerHTML = nbsp;
+                if (currentstatus != "open" && currentstatus != "ended") {
+                  if (currentstatus == "extended") {
+                    currentstatus = "<font color=red><i>" + currentstatus + "</i></font>";
+                  }
+                  span.innerHTML = currentstatus;
+                }
+                var span_id = item + "_endtime";
+                span = document.getElementById(span_id)
+                var basesec = document.getElementsByName("baseseconds")[0].value;
+                var end_time_countdown = parseInt(basesec) + parseInt(data.items[item].end_time); 
+                var item_message = "ended";
+                if (data.items[item].status == "open" || data.items[item].status == "extended") {
+                  item_message = "closing";
+                }
+                clearInterval(timers[span_id])
+                createTimer(span_id, end_time_countdown, item_message);
+              }
+            }
+          }   
+        }
+      }
+    }
+  };
+    var url = "/cgi-bin/v6.cgi?a=getBids&c=" + document.getElementsByName("client")[0].value + "&event=" + document.getElementsByName("auction")[0].value + '&contents=' + document.getElementsByName("contents")[0].value;
+
+    xmlhttp.open("GET", url, true);
+    xmlhttp.send();
+}
+
+function LeadingZero(Time) {
+  return (Time < 10) ? "0" + Time : + Time;
+}
+
+function createTimer(timer_id, countDownDate, endText) {
+  timers[timer_id] = setInterval(function () {
+    var ndate = new Date();
+    var nbaseseconds  = Math.round(ndate.getTime() / 1000);
+    var distance = countDownDate - nbaseseconds - tdifference;
+    var hours = Math.floor((distance % (60 * 60 * 24)) / (60 * 60));
+    var minutes = Math.floor((distance % (60 * 60)) / 60);
+    var seconds = Math.floor(distance % 60);
+    document.getElementById(timer_id).innerHTML = "<b>" + LeadingZero(hours) + ":" + LeadingZero(minutes) + ":" + LeadingZero(seconds) + "</b>";
+    if (distance < 0) {
+        document.getElementById(timer_id).innerHTML = "<b>" + endText + "</b>";
+    }
+  }, 1000);
+}
+
+window.onload = (event) => {
+  AutoRefresh();
+};
+
+function AutoRefresh() {
+  var tdate = new Date();
+  var tsecond = Math.round(tdate.getTime() / 1000);
+  var basesec = document.getElementsByName("baseseconds")[0].value;
+  var currsec = document.getElementsByName("currentsecond")[0].value;
+  var arvalue = document.getElementsByName("arvalue")[0].value;
+  var scrollval = document.getElementsByName("scrollval")[0].value;
+  var arrefresh = parseInt(arvalue);
+  tdifference = parseInt(basesec) + parseInt(currsec) - parseInt(tsecond);
+  window.scrollTo(0,scrollval);
+  if (document.getElementsByName("auto_refresh")[0].value == 1) {
+    RefreshBids();
+    setInterval(RefreshBids, arrefresh);
+    return true;
+  }
+  return false;
+}
+//-->;
+</script>
+	 <div class="wrapper"> <div class="header" style="background: #073c68;box-shadow: 0px 0px 10px #b4b4b4 !important;">  <div class="green-row-top" style="background-color: #81bf50;height: 3px;"> </div> <div class="w3-row" style="max-width: 1200px;margin-left: auto;margin-right: auto;position: relative;">    <div class="w3-row">     <div class="w3-col" style="width:200px">     <div id="logo" class="w3-hide-small w3-hide-medium"><a href="https://www.ebidlocal.com/"><img src="/images/logo1.png" alt="Ebid Local Online Auctions" style="width: 195px;padding-top: 7px;padding-bottom: 8px;" border="0"/></a></div></div>               <div class="w3-rest w3-container w3-right w3-hide-small w3-hide-medium">          <div class="w3-row top links w3-center"><br/><a href="https://auction.ebidlocal.com/terms.html" class="topNAV" style="padding-left: 25px;padding-right: 25px;color: #9fd7f3;text-decoration: none;">Register to Bid</a><a href="https://auction.ebidlocal.com/cgi-bin/mnregup.cgi?staples" target="_blank" class="topNAV" style="padding-left: 25px;padding-right: 25px;color: #9fd7f3;text-decoration: none;">Update Bidder Profile</a><a href="https://www.ebidlocal.com/contact-ebidlocal/" class="topNAV" style="padding-left: 25px;padding-right: 125px;color: #9fd7f3;text-decoration: none;">Contact eBidLocal</a>     </div>      <div style="padding-top: 10px;" class="w3-row w3-center">   <div class="w3-half w3-container">    <!-- Begin Robly Signup Form --> 									<div id="robly_embed_signup"> 									  <form action="https://list.robly.com/subscribe/post" method="post" id="robly_embedded_subscribe_form" name="robly_embedded_subscribe_form" class="validate" target="_blank" novalidate=""> 										<input name="a" value="822beac4ee5c9f8c2021175c1087cb70" type="hidden"/>  											<br/><input value="" name="EMAIL" class="slim_email" id="DATA0" placeholder="Enter email address - Get Weekly Event Alerts" required="" style="width:300px;" type="email"/> 											<!--<input type="submit" value="Subscribe" name="subscribe" id="robly_embedded_subscribe" class="slim_button"/>--> 									  </form> 									</div> 									<style type="text/css"> 										#robly_embed_signup{float:right;margin-top: -5px;width:300px;font-size:12px;} 										#robly_embed_signup form {display:block; position:relative; text-align:left;} 										#robly_embed_signup h2 {font-weight:bold; padding:0; margin:15px 0; font-size:1.3em;} 										#robly_embed_signup input {border:1px solid #999; -webkit-appearance:none;} 										#robly_embed_signup input[type=checkbox]{-webkit-appearance:checkbox;} 										#robly_embed_signup input[type=radio]{-webkit-appearance:radio;} 										#robly_embed_signup input:focus {border-color:#333;} 										#robly_embed_signup .button {background-color: #aaa; border: 0 none; border-radius:4px; color: #FFFFFF; cursor: pointer; display: inline-block; font-size:15px; font-weight: bold; height: 32px; line-height: 32px; margin: 0 5px 10px 0; padding:0; text-align: center; text-decoration: none; vertical-align: top; white-space: nowrap; width: auto;} 										#robly_embed_signup .button:hover {background-color:#777;} 										#robly_embed_signup .slim_button {background-color: #81bf50;; border: 0 none; border-radius:4px; color: #FFFFFF; cursor: pointer; display: inline-block; font-size:15px; font-weight: bold; height: 32px; line-height: 32px; margin: 0 5px 10px 0; padding:0 15px; text-align: center; text-decoration: none; vertical-align: top; white-space: nowrap; width: auto;} 										#robly_embed_signup .slim_button:hover {background-color:#777;} 										#robly_embed_signup .small_meta {font-size: 11px;} 										#robly_embed_signup .nowrap {white-space:nowrap;} 										#robly_embed_signup .clear {clear:none; display:inline;visibility:visible;} 										#robly_embed_signup .robly_field_group .asterisk {position:relative;top:5px; left:2px;} 										#robly_embed_signup label {display:block; font-size:16px; padding-bottom:10px; font-weight:bold;} 										#robly_embed_signup input.email {display:block; padding:8px 0; margin:0 4% 10px 0; text-indent:5px; width:90%; min-width:130px;} 										#robly_embed_signup input.slim_email {display:inline-block; padding:8px 0; margin:0 0px 10px 0; text-indent:5px; width:60%;} 										#robly_embed_signup input.button {width:40%; margin:0 0 10px 0; min-width:90px;} 										#robly_embed_signup .robly_field_group.input_group ul {margin:0; padding:5px 0; list-style:none;} 										#robly_embed_signup .robly_field_group.input_group ul li {display:block; padding:3px 0; margin:0;} 										#robly_embed_signup .robly_field_group.input_group label {display:inline;} 										#robly_embed_signup .robly_field_group.input_group input {display:inline; width:auto; border:none;} 										#robly_embed_signup div#robly_responses {float:left; top:-1.4em; padding:0em .5em 0em .5em; overflow:hidden; width:90%;margin: 0 5%; clear: both;} 										#robly_embed_signup div.response {margin:1em 0; padding:1em .5em .5em 0; font-weight:bold; float:left; top:-1.5em; z-index:1; width:80%;} 										#robly_embed_signup #robly_error_response {display:none;} 										#robly_embed_signup #robly_success_response {color:#529214; display:none;} 										#robly_embed_signup label.error {display:block; float:none; width:auto; margin-left:1.05em; text-align:left; padding:.5em 0;} 										#robly_embedded-subscribe {clear:both; width:auto; display:block; margin:1em 0 1em 5%;} 										#robly_embed_signup #num-subscribers {font-size:1.1em;} 										#robly_embed_signup #num-subscribers span {padding:.5em; border:1px solid #ccc; margin-right:.5em; font-weight:bold;} 										#robly_embed_signup .power {postion: relative; float: right; margin-right: 16px; height:32px;} 										#robly_embed_signup #slim_power {float:none;} 										#robly_embed_signup .power p {font-size:12px; margin:0px; font-weight:bold; line-height:32px; color:#666;} 										#robly_embed_signup .power p a {text-decoration:none; font-weight:bold; color:#333;} 										#robly_embed_signup .power p a:hover {text-decoration:none; color:#000;} 										/* Add your own Robly form styles to your site stylesheet or in this style block. 										   We recommend moving this block and the preceding CSS link to the HEAD of your HTML file. */ 									</style>  									<script> 									  $(document).ready(function () {  										  $("#robly_embedded_subscribe").click(function (e) { 											  e.preventDefault();  											  var email = $("#DATA0").val(); 											  if (!is_valid_email_address(email)) { 												  alert("Please enter a valid email address."); 												  return false; 											  }   											  var f = $("#robly_embedded_subscribe_form"); 											  f.submit();  											  return false; 										  });  									  });  									  function is_valid_email_address(emailAddress) { 										  var pattern = new RegExp(/^((([a-z] \d [!#\$%&'\*\+\-\/=\?\^_`{\ }~] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z] \d [!#\$%&'\*\+\-\/=\?\^_`{\ }~] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*) ((\x22)((((\x20 \x09)*(\x0d\x0a))?(\x20 \x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f] \x21 [\x23-\x5b] [\x5d-\x7e] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]) (\\([\x01-\x09\x0b\x0c\x0d-\x7f] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20 \x09)*(\x0d\x0a))?(\x20 \x09)+)?(\x22)))@((([a-z] \d [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]) (([a-z] \d [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z] \d - \. _ ~ [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z] \d [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]) (([a-z] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z] \d - \. _ ~ [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z] [\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i); 										  return pattern.test(emailAddress); 									  }  									</script> 									<!-- End Robly Signup Form -->   </div>   <div class="w3-half w3-container" style="padding-top: 13px;">     <a href="https://www.facebook.com/EbidLocal" target="_blank"><img src="https://auction.ebidlocal.com/images/fb.png" style="padding:.5px;" width="32" height="32" border="0"/></a>      <a href="https://twitter.com/ebidlocal/" target="_blank"><img src="https://auction.ebidlocal.com/images/twitter.png" style="padding:.5px;" width="32" height="32" border="0"/></a>      <a href="https://www.pinterest.com/ebidlocal/" target="_blank"><img src="https://auction.ebidlocal.com/images/pinterest.png" style="padding:.5px;" width="32" height="32" border="0"/></a>      <a href="https://www.linkedin.com/company/ebidlocal-com" target="_blank"><img src="https://auction.ebidlocal.com/images/in.png" style="padding:.5px;" width="32" height="32" border="0"/></a>   </div> </div>                   															                <div class="w3-bar w3-navigation" style="margin-top: 24px;">          <div class="w3-dropdown-hover">       <button class="w3-button">SALE EVENTS <i class="fa fa-caret-down"></i></button>       <div class="w3-dropdown-content w3-bar-block w3-card-4">         <a href="https://auction.ebidlocal.com/cgi-bin/mmcal.cgi?staples" class="w3-bar-item w3-button">CURRENT SALE EVENTS</a>         <a href="/cgi-bin/mmcal2.cgi?staples" class="w3-bar-item w3-button">RECENT SALE EVENTS</a>         <a href="/cgi-bin/mmarcview.cgi?staples" class="w3-bar-item w3-button">ARCHIVED SALE EVENTS</a>       </div>     </div>     <div class="w3-dropdown-hover">       <button class="w3-button">BUYERS <i class="fa fa-caret-down"></i></button>       <div class="w3-dropdown-content w3-bar-block w3-card-4">         <a href="/terms.html" class="w3-bar-item w3-button">REGISTER TO BID</a>         <a href="https://auction.ebidlocal.com/cgi-bin/mnregup.cgi?staples" class="w3-bar-item w3-button">UPDATE BIDDER PROFILE</a>         <a href="/terms.html" class="w3-bar-item w3-button">TERMS &amp; CONDITIONS</a>       </div>     </div>     <a href="https://www.ebidlocal.com/sellers/" class="w3-bar-item w3-button">SELLERS</a>     <a href="https://www.ebidlocal.com/appraisals/" class="w3-bar-item w3-button">APPRAISALS</a>         <div class="w3-dropdown-hover">       <button class="w3-button">AFFILIATES <i class="fa fa-caret-down"></i></button>       <div class="w3-dropdown-content w3-bar-block w3-card-4">         <a href="https://www.ebidlocal.com/find-an-affiliate/" class="w3-bar-item w3-button">FIND AN AFFILIATE</a>         <a href="https://www.ebidlocal.com/affiliates/" class="w3-bar-item w3-button">BE AN AFFILIATE</a>       </div>     </div>     <a href="tel:+8043580500" class="w3-bar-item w3-button"><i class="fa fa-phone" aria-hidden="true"></i>  804-358-0500</a>            </div></div> </div>         <div class="w3-container w3-hide-large w3-indigo">   <div class="w3-row w3-center"><a href="https://www.ebidlocal.com/"><img src="/images/logo1.png" width="130px;"/></a></div><br/>      <div class="w3-row w3-center"><br/><a href="http://auction.ebidlocal.com/terms.html" class="topNAV w3-button w3-border" style="padding-left: 25px;padding-right: 25px;color: #9fd7f3;text-decoration: none;">Register to Bid</a><a href="https://auction.ebidlocal.com/cgi-bin/mnregup.cgi?staples" target="_blank" class="topNAV w3-button w3-border" style="padding-left: 25px;padding-right: 25px;color: #9fd7f3;text-decoration: none;">Update Bidder Profile</a><a href="http://www.ebidlocal.com/contact-ebidlocal/" class="topNAV w3-button w3-border" style="padding-left: 25px;padding-right: 25px;color: #9fd7f3;text-decoration: none;">Contact eBidLocal </a></div><br/>   <div class="w3-row w3-center"> <i class="fa fa-gavel fa-lg"></i> <a href="tel:+8043580500" class="w3-button w3-large w3-indigo"><b>804-358-0500</b></a>  </div> </div>   <div class="w3-dropdown-click w3-block w3-hide-large">     <button onclick="myFunction()" class="w3-btn w3-block w3-green w3-center" style="border: 2px solid #f2f2f2;font-size: 15px;font-weight: bold;">Navigation Menu  <i class="fa fa-bars" aria-hidden="true"></i> </button>     <div id="Demo" class="w3-dropdown-content w3-bar-block w3-border" style="width: 100%;position: relative;">       <a href="https://auction.ebidlocal.com/cgi-bin/mmcal.cgi?staples" class="w3-bar-item w3-button w3-bar-block w3-block">Current Sale Events</a>       <a href="/cgi-bin/mncal2.cgi?staples" class="w3-bar-item w3-button w3-bar-block w3-block">Recent Sale Events</a>       <a href="/cgi-bin/mmarcview.cgi?staples" class="w3-bar-item w3-button w3-bar-block w3-block">Archived Sale Events</a>       <a href="/terms.html" class="w3-bar-item w3-button w3-bar-block w3-block">Buyers - Register to Bid</a>       <a href="https://auction.ebidlocal.com/cgi-bin/mnregup.cgi?staples" class="w3-bar-item w3-button w3-bar-block w3-block">Buyers - Update Bidder Profile</a>       <a href="/terms.html" class="w3-bar-item w3-button w3-bar-block w3-block">Buyers - Terms &amp; Conditions</a>       <a href="https://www.ebidlocal.com/sellers/" class="w3-bar-item w3-button w3-bar-block w3-block">Sellers</a>       <a href="https://www.ebidlocal.com/appraisals/" class="w3-bar-item w3-button w3-bar-block w3-block">Appraisals</a>       <a href="https://www.ebidlocal.com/find-an-affiliate/" class="w3-bar-item w3-button w3-bar-block w3-block">Find an Affiliate</a>       <a href="https://www.ebidlocal.com/affiliates/" class="w3-bar-item w3-button w3-bar-block w3-block">Be an Affiliate</a>                               </div>   </div> </div> </div> <script> function myFunction() {     var x = document.getElementById("Demo");     if (x.className.indexOf("w3-show") == -1) {         x.className += " w3-show";     } else {          x.className = x.className.replace(" w3-show", "");     } } </script>          	 	 	      <div class="container" style="margin-top: 60px;">
+<div align="center" id="SearchArea">
+<form method="post" name="searchform" action="/cgi-bin/mmlist.cgi" onsubmit="return searchtest()">
+<input type="hidden" name="auction" value="staples577"/>Keywords: <input type="text" name="keyword" value="chainsaw dreamcast famicom lawnmower macintosh nintendo playstation ps3 ps4 psp sega turbografx tv vita xbox" size="15"/> 
+<span class="searchtype"><select name="stype">
+<option value="ANY" selected="">Any of the words</option>
+<option value="ALL">All of the words</option>
+<option value="PHRASE">Exact phrase</option>
+<option value="CONTAIN">Containing...</option>
+</select></span> 
+<input type="submit" name="search" value="Go!"/>
+<div align="center" id="NavLinks">
+ <a href="/cgi-bin/mmdetails.cgi?staples577"><font size="+1">Auction Details</font></a>
+</div>
+</form>
+<form method="post" action="/cgi-bin/mmcal.cgi" name="searchform1">
+<input type="hidden" name="auction" value="staples"/>
+<input type="hidden" name="atype" value=""/>
+<input type="hidden" name="stype" value="ANY"/>
+<input type="hidden" name="keyword" value="chainsaw dreamcast famicom lawnmower macintosh nintendo playstation ps3 ps4 psp sega turbografx tv vita xbox"/>
+<input type="hidden" name="search" value="Go!"/>
+</form>
+</div>
+<div id="SelectCat" align="center">
+<table class="listtop" border="0" cellpadding="3" cellspacing="0" align="center">
+<tbody><tr valign="top"><td class="listrefresh"><form method="post" name="rform" action="/cgi-bin/mmlist.cgi">
+<input type="hidden" name="rnum" value="0"/>
+<input type="hidden" name="scrolly" value="0"/>
+<input type="hidden" name="watchitem" value="0"/>
+<input type="hidden" name="auction" value="staples577"/>
+<input type="hidden" name="formtime" value="1620654214"/>
+<input type="hidden" name="pages" value="1"/>
+<input type="hidden" name="searchtitle" value="Keywords:-chainsaw-dreamcast-famicom-lawnmower-macintosh-nintendo-playstation-ps3-ps4-psp-sega-turbografx-tv-vita-xbox"/>
+<input type="hidden" name="searchcount" value="4"/>
+<input type="hidden" name="page" value="p1"/>
+<input type="hidden" name="p1" value="40/668/765/854/"/>
+<input type="submit" name="forward" value="Refresh"/>
+</form></td><td class="listcategory">
+<form action="">
+<select onchange="if(this.selectedIndex!=0) self.location=this.options[this.selectedIndex].value">
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ALL">Select category</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ALL">VIEW ITEMS AND BID (365)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ALBUMS">ALBUMS (13)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/APPLIANCES">APPLIANCES (6)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ART">ART (3)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ART--">ART   (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ART-SUPPLIES">ART SUPPLIES (3)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/BABY-SUPPLIES">BABY SUPPLIES (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/BEDDING">BEDDING (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/BIKES">BIKES (4)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/BOOKS">BOOKS (7)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/CLOTHING">CLOTHING (30)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/COLLECTIBLES">COLLECTIBLES (24)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/DECORATIVE">DECORATIVE (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/DVDS">DVDS (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/ELECTRONICS">ELECTRONICS (13)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/EXERCISE-EQUIPMENT">EXERCISE EQUIPMENT (3)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/FANS">FANS (8)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/FURNITURE">FURNITURE (27)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/GAMING">GAMING (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/HEALTH-AND-BEAUTY">HEALTH AND BEAUTY (6)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/HOLIDAY-">HOLIDAY  (8)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/HOUSEWARES">HOUSEWARES (33)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/JEWELRY">JEWELRY (15)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/KITCHENWARE">KITCHENWARE (29)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/LAWN-AND-GARDEN">LAWN AND GARDEN (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/LIGHTING">LIGHTING (6)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/MIRRORS">MIRRORS (4)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/MUSICAL-INSTRUMENTS">MUSICAL INSTRUMENTS (3)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/OFFICE-SUPPLIES">OFFICE SUPPLIES (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/PARTY-SUPPLIES">PARTY SUPPLIES (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/PATIO">PATIO (11)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/PET-SUPPLIES">PET SUPPLIES (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/POWER-TOOLS">POWER TOOLS (4)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/PURSES">PURSES (18)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/RELIGIOUS">RELIGIOUS (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/RUGS">RUGS (1)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/SCHOOL-SUPPLIES">SCHOOL SUPPLIES (2)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/SPORTING-GOODS">SPORTING GOODS (7)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/STORAGE">STORAGE (12)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/TOOLS">TOOLS (3)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/TOYS-AND-GAMES">TOYS AND GAMES (39)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/USCOINS">USCOINS (5)</option>
+<option value="/cgi-bin/mmlist.cgi?staples577/category/VACUUMS">VACUUMS (1)</option>
+</select>
+</form></td><td class="listtopnotes"><a href="#pgbottom">See bottom of page to submit bids</a></td></tr>
+</tbody></table>
+</div>
+<table id="TableTop" class="listhead" width="100%" border="0">
+<tbody><tr valign="bottom">
+<td class="searchinfo">Keywords: chainsaw dreamcast famicom lawnmower macintosh nintendo playstation ps3 ps4 psp sega turbografx tv vita xbox (4 records)</td>
+<td class="titledatetime"><a href="/cgi-bin/mmdetails.cgi?staples577">#1377: <b><u> Ample Storage Auction Online: </u></b><u> 5500 Brook Rd: Richmond VA 23227</u> (DIY Seller Sale) -  </a></td>
+</tr>
+<tr><td colspan="2" class="previouspage">
+<span id="prpage"><a href="javascript:ppagef()">Previous page</a>
+</span> 
+<span id="nepage"><a href="javascript:npagef()">Next page</a>
+</span>
+</td></tr>
+</tbody></table><br/>
+<form name="bidform" method="post" action="/cgi-bin/mmlistb.cgi"><input name="autoconfirm" type="hidden" value=""/>
+<table id="DataTable" class="listbody" border="0" width="100%" align="center" cellpadding="3" cellspacing="1"><thead>
+<tr bgcolor="#073c68" valign="bottom">
+<th align="center" width="40"><font color="#ffffff"><strong> Item </strong></font></th>
+<th id="DataTablePhoto" align="center"><font color="#ffffff"><strong> Photo </strong></font></th>
+<th id="DataTableDesc" align="center"><font color="#ffffff"><strong> Description</strong></font></th>
+<th align="center"><font color="#ffffff"><strong> Bids </strong></font></th>
+<th align="center"><font color="#ffffff"><strong> High <br/> Bidder </strong></font></th>
+<th align="center"><font color="#ffffff"><strong> Current <br/> Amount </strong></font></th>
+<th align="center"><font color="#ffffff"><strong> Next Bid <br/> Required</strong></font></th>
+<th align="center"><font color="#ffffff"><strong> Your <br/> Bid </strong></font></th>
+<th align="center"><font color="#ffffff"><strong> Your <br/> Maximum </strong></font></th></tr></thead>
+<tbody><tr class="DataRow" id="40" valign="top"><td class="item"><a href="/cgi-bin/mmlist.cgi?staples577/40">40</a><br/><div class="morepics"><a href="/cgi-bin/mmlist.cgi?staples577/40">more<br/>pics</a></div></td>
+<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples577/40"><img border="0" src="https://ebid15.com/photos/202105-Rob Hudson-1377/smalls/40.JPG" alt="smalls/40.JPG"/></a></td><td class="description"><b>Category</b>: GAMING<br/><b>Item</b>: XBOX ONE CONSOLE<br/><b>Location</b>: UNITI# 526  ROB  804-386-3941<br/></td>
+<td align="right" class="bids"><a href="/cgi-bin/mmhistory.cgi?staples577/40"><span id="40_bids">11</span></a></td>
+<td align="right" class="highbidder"><span id="40_highbidder">21550</span></td>
+<td align="right" class="currentamount"><span id="40_currentprice">71.71</span></td>
+<td align="right" class="nextbidrequired"><span id="40_nextrequired"><a href="javascript:subfillform(&#39;40&#39;,&#39;76.71&#39;)">76.71</a></span></td>
+<td align="center" class="yourbid"><span id="40_yourbid"><input type="text" name="40" size="8" placeholder="your bid"/></span></td>
+<td align="center" class="yourmaximum"><span id="40_yourmax"><input type="text" name="m40" size="8" placeholder="your max"/>
+<br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="40_endtime"><i>
+<br/>31 min.<br/>remaining
+<br/><a href="javascript:subform(&#39;40&#39;)">refresh</a></i></span><br/><span id="40_status"></span></td></tr>
+<tr class="DataRow" id="668" valign="top"><td class="item"><a href="/cgi-bin/mmlist.cgi?staples577/668">668</a><br/><div class="morepics"><a href="/cgi-bin/mmlist.cgi?staples577/668">more<br/>pics</a></div></td>
+<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples577/668"><img border="0" src="https://ebid15.com/photos/202105-Rob Hudson-1377/smalls/668.JPG" alt="smalls/668.JPG"/></a></td><td class="description"><b>Category</b>: ELECTRONICS<br/><b>Item</b>: PS3 GAMES<br/><b>Location</b>: UNIT# 574 RYAN 804-263-5211<br/></td>
+<td align="right" class="bids"><a href="/cgi-bin/mmhistory.cgi?staples577/668"><span id="668_bids">6</span></a></td>
+<td align="right" class="highbidder"><span id="668_highbidder">23639</span></td>
+<td align="right" class="currentamount"><span id="668_currentprice">3.50</span></td>
+<td align="right" class="nextbidrequired"><span id="668_nextrequired"><a href="javascript:subfillform(&#39;668&#39;,&#39;4.00&#39;)">4.00</a></span></td>
+<td align="center" class="yourbid"><span id="668_yourbid"><input type="text" name="668" size="8" placeholder="your bid"/></span></td>
+<td align="center" class="yourmaximum"><span id="668_yourmax"><input type="text" name="m668" size="8" placeholder="your max"/>
+<br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="668_endtime"><i>
+<br/>1 hr.
+<br/>16 min.<br/>remaining
+<br/><a href="javascript:subform(&#39;668&#39;)">refresh</a></i></span><br/><span id="668_status"></span></td></tr>
+<tr class="DataRow" id="765" valign="top"><td class="item"><a href="/cgi-bin/mmlist.cgi?staples577/765">765</a><br/><div class="morepics"><a href="/cgi-bin/mmlist.cgi?staples577/765">more<br/>pics</a></div></td>
+<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples577/765"><img border="0" src="https://ebid15.com/photos/202105-Rob Hudson-1377/smalls/765.JPG" alt="smalls/765.JPG"/></a></td><td class="description"><b>Category</b>: ELECTRONICS<br/><b>Item</b>: 19&#34; SANYO LCD TV<br/><b>Location</b>: UNIT# 574 RYAN 804-263-5211<br/></td>
+<td align="right" class="bids"><a href="/cgi-bin/mmhistory.cgi?staples577/765"><span id="765_bids">3</span></a></td>
+<td align="right" class="highbidder"><span id="765_highbidder">23218</span></td>
+<td align="right" class="currentamount"><span id="765_currentprice">6.50</span></td>
+<td align="right" class="nextbidrequired"><span id="765_nextrequired"><a href="javascript:subfillform(&#39;765&#39;,&#39;7.50&#39;)">7.50</a></span></td>
+<td align="center" class="yourbid"><span id="765_yourbid"><input type="text" name="765" size="8" placeholder="your bid"/></span></td>
+<td align="center" class="yourmaximum"><span id="765_yourmax"><input type="text" name="m765" size="8" placeholder="your max"/>
+<br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="765_endtime"><i>
+<br/>1 hr.
+<br/>48 min.<br/>remaining
+<br/><a href="javascript:subform(&#39;765&#39;)">refresh</a></i></span><br/><span id="765_status"></span></td></tr>
+<tr class="DataRow" id="854" valign="top"><td class="item"><a href="/cgi-bin/mmlist.cgi?staples577/854">854</a><br/><div class="morepics"><a href="/cgi-bin/mmlist.cgi?staples577/854">more<br/>pics</a></div></td>
+<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples577/854"><img border="0" src="https://ebid15.com/photos/202105-Rob Hudson-1377/smalls/854.JPG" alt="smalls/854.JPG"/></a></td><td class="description"><b>Category</b>: HOUSEWARES<br/><b>Item</b>: TV TRAY,  PAPER TOWEL HOLDER<br/><b>Location</b>: UNIT# 574 RYAN 804-263-5211<br/></td>
+<td align="right" class="bids"><span id="854_bids"> </span></td>
+<td align="right" class="highbidder"><span id="854_highbidder"> </span></td>
+<td align="right" class="currentamount"><span id="854_currentprice"> </span></td>
+<td align="right" class="nextbidrequired"><span id="854_nextrequired"><a href="javascript:subfillform(&#39;854&#39;,&#39;0.99&#39;)">0.99</a></span></td>
+<td align="center" class="yourbid"><span id="854_yourbid"><input type="text" name="854" size="8" placeholder="your bid"/></span></td>
+<td align="center" class="yourmaximum"><span id="854_yourmax"><input type="text" name="m854" size="8" placeholder="your max"/>
+<br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="854_endtime"><i>
+<br/>2 hr.
+<br/>18 min.<br/>remaining
+<br/><a href="javascript:subform(&#39;854&#39;)">refresh</a></i></span><br/><span id="854_status"></span></td></tr>
+</tbody></table><a name="pgbottom"></a>
+<input type="hidden" name="auction" value="staples577"/>
+<input type="hidden" name="contents" value="40/668/765/854/"/><br/>
+<table id="SubmitBids" class="submitbids" border="0" align="center"><tbody><tr><td class="sbidblabel">Bidder number</td><td class="sbidbidder"> <input type="text" name="bidder" size="8"/></td><td class="sbidplabel">Password</td><td class="sbidpassword"> <input type="password" name="password" size="8"/></td>
+<td class="sbidconfirm"><input type="submit" name="confirm" value="Submit Bids"/></td>
+<td class="sbidreview"><input type="submit" name="review" value="Review Bids"/></td><td class="sbidincrement"><a href="/cgi-bin/mmincview.cgi?staples577">Increments</a></td>
+</tr></tbody></table>
+<input type="hidden" name="pages" value="1"/>
+<input type="hidden" name="searchtitle" value="Keywords:-chainsaw-dreamcast-famicom-lawnmower-macintosh-nintendo-playstation-ps3-ps4-psp-sega-turbografx-tv-vita-xbox"/>
+<input type="hidden" name="searchcount" value="4"/>
+<input type="hidden" name="page" value="p1"/>
+<input type="hidden" name="p1" value="40/668/765/854/"/>
+</form>
+<form name="viewform" method="post" action="/cgi-bin/mmlist.cgi">
+<br/><div align="center">
+<input type="hidden" name="auction" value="staples577"/>
+<input type="hidden" name="contents" value="40/668/765/854/"/>
+<input type="hidden" name="pages" value="1"/>
+<input type="hidden" name="searchtitle" value="Keywords:-chainsaw-dreamcast-famicom-lawnmower-macintosh-nintendo-playstation-ps3-ps4-psp-sega-turbografx-tv-vita-xbox"/>
+<input type="hidden" name="searchcount" value="4"/>
+<input type="hidden" name="page" value="p1"/>
+<p align="center">
+<input type="hidden" name="p1" value="40/668/765/854/"/>
+<input type="hidden" name="nwpage" value=""/> </p>
+</div>
+</form>		
+<script language="JavaScript" type="text/javascript">;
+<!--;
+if (window.performance && window.performance.navigation.type == window.performance.navigation.TYPE_BACK_FORWARD) {
+    document.rform.scrolly.value = (document.all)?document.body.scrollTop:window.pageYOffset; 
+    document.rform.submit();
+  }
+//-->;
+</script>		
+<script language="JavaScript" type="text/javascript">;
+<!--;
+replaceText('prpage', '&nbsp;');
+//-->;
+</script>		
+<script language="JavaScript" type="text/javascript">;
+<!--;
+replaceText('nepage', '&nbsp;');
+//-->;
+</script><!-- End Auction content -->     </div>   <!-- Footer --> <div class="w3-indigo w3-container w3-padding-32" style="margin-top:75px;border-top: 10px solid green;">   <center><i class="fa fa-facebook-official w3-hover-text-indigo"></i>     <i class="fa fa-twitter w3-hover-text-light-blue"></i><br/><b>Ebid Local</b><br/><font size="1"> <a href="https://www.ebidlocal.com/" target="_top">Ebid Local Home</a> - <a href="/cgi-bin/mmcal.cgi?staples">Online Auctions</a> - <a href="/terms.html">Registration</a>  <br/> © Copyright, 2017 Ebid Local <br/> </font><a href="#" class="rs-link" data-link-desktop="Switch to desktop version" data-link-responsive="Switch to responsive / mobile version"></a></center>     </div></div>  <div class="scroll-top-wrapper show">  <span class="scroll-top-inner">   <i class="fa fa-2x fa-arrow-circle-up"></i>  </span> </div>    <script>   $(function(){    $(document).on( 'scroll', function(){     if ($(window).scrollTop() > 100) {    $('.scroll-top-wrapper').addClass('show');   } else {    $('.scroll-top-wrapper').removeClass('show');   }  });    $('.scroll-top-wrapper').on('click', scrollToTop); });   function scrollToTop() {  verticalOffset = typeof(verticalOffset) != 'undefined' ? verticalOffset : 0;  element = $('body');  offset = element.offset();  offsetTop = offset.top;  $('html, body').animate({scrollTop: offsetTop}, 500, 'linear'); } </script>      
+</body></html>

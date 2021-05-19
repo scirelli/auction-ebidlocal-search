@@ -57,7 +57,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv"]}' \
+		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "lawnmower"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
