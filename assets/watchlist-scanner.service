@@ -8,6 +8,7 @@ Restart=always
 RestartSec=1
 User=ebidlocal
 ExecStart=/usr/bin/env /opt/ebidlocal/scanner --config-path=/opt/ebidlocal/configs/config.json
+EnvironmentFile=/opt/ebidlocal/scanner-env.conf
 
 [Install]
 WantedBy=multi-user.target
