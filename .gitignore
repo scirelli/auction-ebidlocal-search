@@ -17,3 +17,4 @@
 build/
 __debug_bin
 .vim/
+configs/config.json
