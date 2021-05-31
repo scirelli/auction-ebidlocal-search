@@ -3,6 +3,8 @@ package notify
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"path"
 	"strings"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
@@ -10,20 +12,29 @@ import (
 )
 
 type EmailNotify struct {
-	Logger      log.Logger
-	MessageChan <-chan NotificationMessage
-	ServerUrl   string
+	Logger       log.Logger
+	MessageChan  <-chan NotificationMessage
+	ServerUrl    string
+	WatchlistDir string
 }
 
 func (en *EmailNotify) Notify(message NotificationMessage) error {
 	en.Logger.Infof("Message received trying to email... %s", message)
+	var body string
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {
+			body = fmt.Sprintf("%s/user/%s/watchlist/%s", en.ServerUrl, message.User.ID, wlID)
+			if data, err := ioutil.ReadFile(path.Join(en.WatchlistDir, wlID, "index.html")); err == nil {
+				body = strings.Replace(string(data), "&lt;!--{{watchlistName}}--&gt;", wlname, 1)
+			} else {
+				en.Logger.Errorf("Error retrieving wl '%s'", err)
+			}
+
 			if wlID == message.WatchlistID {
 				return email.NewEmail(
 					[]string{message.User.Email},
 					fmt.Sprintf("Your watch list has updates '%s'", wlname),
-					fmt.Sprintf("%s/user/%s/watchlist/%s", en.ServerUrl, message.User.ID, wlID),
+					body,
 				).Send()
 			}
 		}

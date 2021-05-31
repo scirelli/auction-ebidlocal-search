@@ -1,59 +1,9 @@
 <html>
     <head>
-        <script type="module" src="js/main.js"></script>
-        <noscript>
-            <style>
-                .noscript {
-                    display: none;
-                }
-            </style>
-        </noscript>
-        <style>
-            form#createWatchlistForm input{
-                display: block;
-            }
-            form#createWatchlistForm input#addKeyword {
-                display: inline-block;
-                margin-left: 5px;
-            }
-            form#createWatchlistForm input#keyword {
-                display: inline-block;
-            }
-        </style>
     </head>
     <body>
-        <p>
-        The <a href="https://www.ebidlocal.com/">Ebidlocal</a> search is very limited. It does not allow any special characters or phrases (such as "cd player"). Therefore keywords you enter here should be single words.
-        </p>
-        <noscript>
-            <section class="noscript">
-                <form action="/api/create-watch-list" method="post">
-                    <label for="user">User:</label>
-                    <input type="text" name="user" placeholder="User id" title="If no user id is entered a new one will be generated for you."/><br/>
-                    <input type="text" name="watchlistName" placeholder="Watch list Name"/><br/>
-                    <label for="watchlist">Watch List:</label><br/>
-                    <p>
-                    Enter keywords as a comma separated list.
-                    </p>
-                    <textarea name="addKeyword"></textarea><br/>
-
-                    <input type="submit" value="Submit"/>
-                </form>
-            </section>
-        </noscript>
-
-        <section class="noscript">
-            <form id="createWatchlistForm" action="/api/create-watch-list" method="post">
-                <label for="user">User:</label>
-                <input type="text" id="user" name="user" placeholder="User id" title="If no user id is entered a new one will be generated for you."/>
-                <label for="watchlist">Watch List:</label>
-                <input type="text" id="watchlistName" name="watchlistName" placeholder="Watch list Name" title="Name your watch list. This is required."/>
-                <input type="text" id="keyword" name="keyword" placeholder="keyword" title="Enter a keyword press add to add it to your watch list."/>
-                <input type="button" id="addKeyword" name="addKeyword" value="Add Keyword"/>
-                <ul id="watchlistList"></ul>
-                <hr/>
-                <input type="submit" value="Submit"/>
-            </form>
-        </section>
+        <ul>
+            <li><a href="/static/addwatchlist.html">Add Watch List</a></li>
+        </ul>
     </body>
 </html>

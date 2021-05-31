@@ -56,6 +56,10 @@ func DefaultConfig(config *Config) *Config {
 		config.Type = "email"
 		logger.Infof("Defaulting Type to '%s'\n", config.Type)
 	}
+	if config.WatchlistDir == "" {
+		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
+		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
+	}
 
 	return config
 }
@@ -67,4 +71,5 @@ type Config struct {
 	UserDir      string `json:"userDir"`
 	ServerUrl    string `json:"serverUrl"`
 	Type         string `json:"type"`
+	WatchlistDir string `json:"watchlistDir"`
 }

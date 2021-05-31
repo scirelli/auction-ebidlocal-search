@@ -142,7 +142,15 @@ func (u *Update) updateWatchlistResults(id string) error {
 
 	if file, err := os.Create(u.watchlistDataFilePathFromID(id)); err == nil {
 		defer file.Close()
-		if err := u.template.Execute(file, u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions)); err != nil {
+		if err := u.template.Execute(file, struct {
+			Rows          chan string
+			WatchlistLink string
+			WatchlistName string
+		}{
+			Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
+			WatchlistLink: u.config.ServerUrl + "/watchlist/" + id,
+			WatchlistName: "<!--{{watchlistName}}-->",
+		}); err != nil {
 			u.logger.Error(err)
 			return err
 		}

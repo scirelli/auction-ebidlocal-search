@@ -58,9 +58,10 @@ func main() {
 	//Any changes found are passed onto a notifier
 	ch, _ := updater.SubscribeForChange()
 	email := notify.EmailNotify{
-		ServerUrl:   appConfig.Notifier.ServerUrl,
-		Logger:      logger,
-		MessageChan: notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch),
+		ServerUrl:    appConfig.Notifier.ServerUrl,
+		Logger:       logger,
+		WatchlistDir: appConfig.Notifier.WatchlistDir,
+		MessageChan:  notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch),
 	}
 	email.Send()
 

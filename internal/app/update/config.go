@@ -58,6 +58,10 @@ func Defaults(config *Config) *Config {
 		config.RunIntervalSeconds = 10
 		logger.Infof("Defaulting run interval '%d\n", config.RunIntervalSeconds)
 	}
+	if config.ServerUrl == "" {
+		config.ServerUrl = "http://localhost:8282"
+		logger.Infof("Defaulting ServerUrl to '%s'\n", config.ServerUrl)
+	}
 
 	return config
 }
@@ -71,4 +75,5 @@ type Config struct {
 	WatchlistDir       string `json:"watchlistDir"`
 	BatchSize          uint64 `json:"batchSize"`
 	RunIntervalSeconds uint64 `json:"runIntervalSeconds"`
+	ServerUrl          string `json:"serverUrl"`
 }
