@@ -37,9 +37,9 @@ func Defaults(config *Config) *Config {
 		config.ContentPath = "."
 		logger.Infof("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
-	if config.TemplateDir == "" {
-		config.TemplateDir = "/template"
-		logger.Infof("Defaulting template dir to '%s'\n", config.TemplateDir)
+	if config.TemplateFile == "" {
+		config.TemplateFile = filepath.Join("./", "assets", "templates", "template.html.tmpl")
+		logger.Infof("Defaulting template dir to '%s'\n", config.TemplateFile)
 	}
 	if config.DataFileName == "" {
 		config.DataFileName = "data.json"
@@ -70,7 +70,7 @@ func Defaults(config *Config) *Config {
 type Config struct {
 	//ContentPath all config paths should be relative to the content path.
 	ContentPath        string `json:"contentPath"`
-	TemplateDir        string `json:"templateDir"`
+	TemplateFile       string `json:"templateFile"`
 	DataFileName       string `json:"dataFileName"`
 	WatchlistDir       string `json:"watchlistDir"`
 	BatchSize          uint64 `json:"batchSize"`

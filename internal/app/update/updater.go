@@ -34,7 +34,7 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
-	}).ParseFiles(filepath.Join("./", "assets", "templates", "template.html.tmpl"))
+	}).ParseFiles(config.TemplateFile)
 
 	if err != nil {
 		logger.Fatal(err)
