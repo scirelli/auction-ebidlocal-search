@@ -52,7 +52,6 @@ func (e *Email) buildEmail() *bytes.Buffer {
 func (e *Email) Send() error {
 	var auth smtp.Auth = smtp.PlainAuth("", e.from, e.password, e.smtpHost)
 
-	log.Printf("From: %s\nTo: %s\nBody: %s\n", e.from, e.to, e.buildEmail().Bytes())
 	if len(e.to) <= 0 {
 		return errors.New("To email address is required.")
 	}
@@ -63,6 +62,5 @@ func (e *Email) Send() error {
 		return err
 	}
 
-	log.Println("Email Sent!")
 	return nil
 }

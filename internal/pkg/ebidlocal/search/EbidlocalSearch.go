@@ -108,14 +108,6 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 		return html, err
 	}
 
-	if os.Getenv("DEBUG") != "" {
-		log.Printf("Writing results to '/tmp/SearchAuction_%s-####'", auction)
-		f, _ := ioutil.TempFile("/tmp", fmt.Sprintf("SearchAuction_%s-", auction))
-		f.WriteString(html)
-		f.Close()
-	}
-
-	log.Printf("Got auction data. \n\n%s", "")
 	return html, nil
 }
 
