@@ -51,7 +51,7 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 		go func(auction string, offset time.Duration) {
 			defer wg.Done()
 			time.Sleep(offset)
-			log.Printf("Searching auction '%s'", auction)
+			//log.Printf("Searching auction '%s'", auction)
 			if html, err := SearchAuction(auction, keywords); err == nil {
 				results <- html
 			}
