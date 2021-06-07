@@ -54,7 +54,7 @@ func (s *Server) registerHTTPHandlers() {
 	s.registerUserRoutes(r.PathPrefix("/user").Subrouter())
 	s.registerWatchlistRoutes(r.PathPrefix("/watchlist").Subrouter())
 
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./web/static")))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir(filepath.Join(s.config.ContentPath, "/web/static"))))
 
 	loggedRouter := handlers.RecoveryHandler()(handlers.LoggingHandler(os.Stdout, r))
 	http.Handle("/", loggedRouter)
@@ -68,18 +68,18 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 		userID := params["userID"]
 		listID := params["listID"]
 
-		d := fmt.Sprintf("./web/watchlists/%s/", listID)
+		d := filepath.Join(s.config.WatchlistDir, listID)
 		rm := fmt.Sprintf("/user/%s/watchlist/%s", userID, listID)
 		http.StripPrefix(rm, http.FileServer(http.Dir(d))).ServeHTTP(w, r)
 	})).Name("getUserWatchlist")
 
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserHandlerFunc), "application/json"))
 
-	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user", http.FileServer(http.Dir("./web/user")))).Name("userData")
+	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
 
 	router.PathPrefix("/{userID}/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := mux.Vars(r)["userID"]
-		d := fmt.Sprintf("./web/user/%s/static", userID)
+		d := filepath.Join(s.config.UserDir, fmt.Sprintf("/%s/static", userID))
 		rm := fmt.Sprintf("/user/%s/", userID)
 		http.StripPrefix(rm, http.FileServer(http.Dir(d))).ServeHTTP(w, r)
 	})).Name("userDir")
@@ -88,7 +88,7 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 }
 
 func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
-	router.Methods("GET").Handler(http.StripPrefix("/watchlist", http.FileServer(http.Dir("./web/watchlists"))))
+	router.Methods("GET").Handler(http.StripPrefix("/watchlist", http.FileServer(http.Dir(s.config.WatchlistDir))))
 	return router
 }
 
