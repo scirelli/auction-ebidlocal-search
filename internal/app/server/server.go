@@ -25,11 +25,7 @@ func New(config Config, store store.Storer, logger log.Logger) *Server {
 		store:  store,
 	}
 
-	if url, err := url.Parse(fmt.Sprintf("%s:%d", config.Address, config.Port)); err != nil {
-		server.logger.Fatal(err)
-	} else {
-		server.addr = url
-	}
+	server.addr = fmt.Sprintf("%s:%d", config.Address, config.Port)
 
 	server.registerHTTPHandlers()
 
@@ -38,14 +34,14 @@ func New(config Config, store store.Storer, logger log.Logger) *Server {
 
 type Server struct {
 	logger log.Logger
-	addr   *url.URL
+	addr   string
 	store  store.Storer
 	config Config
 }
 
 func (s *Server) Run() {
-	s.logger.Infof("Listening on %s\n", s.addr.String())
-	s.logger.Fatal(http.ListenAndServe(s.addr.String(), nil))
+	s.logger.Infof("Listening on %s\n", s.addr)
+	s.logger.Fatal(http.ListenAndServe(s.addr, nil))
 }
 
 func (s *Server) registerHTTPHandlers() {
