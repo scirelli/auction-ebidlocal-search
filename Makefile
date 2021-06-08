@@ -57,7 +57,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "lawnmower"]}' \
+		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "lawnmower", "commodore", "turboexpress", "turbo"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -68,7 +68,7 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "tv"]}' \
+		--data '{"name":"example2", "list":["nintendo", "sega", "chainsaw", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "tv"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -92,6 +92,14 @@ clean: cleanTmpUserId  ## Remove generated build files
 # .PHONY: help
 # help: ## Show help message
 # 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+.PHONY: scannerServiceLog
+scannerServiceLog:
+	sudo journalctl -f -u watchlist-scanner.service
+
+.PHONY: serverServiceLog
+serverServiceLog:
+	sudo journalctl -f -u watchlist-http.service
 
 .PHONY: help
 help: ## Show help message

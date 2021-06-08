@@ -236,5 +236,7 @@ func (u *Update) getResultID(path string) (string, error) {
 	}
 
 	sort.Strings(ids)
-	return fmt.Sprintf("%x", sha1.Sum([]byte(strings.Join(ids, "")))), nil
+	hash := fmt.Sprintf("%x", sha1.Sum([]byte(strings.Join(ids, ""))))
+	//u.logger.Debugf("Watchlist (%s) at '%s' has ids '%s'", hash, path, strings.Join(ids, ", "))
+	return hash, nil
 }

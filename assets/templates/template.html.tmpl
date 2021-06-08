@@ -21,7 +21,7 @@
     </head>
 
     <body bgcolor="#FFFFFF">
-        <a href="{{.WatchlistLink}}">{{.WatchlistName}}</a>
+        <a href="{{.WatchlistLink}}">{{.WatchlistName | htmlSafe}}</a>
         <table id="DataTable" class="listbody" border="0" width="100%" align="center" cellpadding="3" cellspacing="1">
             <thead>
                 <tr bgcolor="#073C68" valign="bottom">

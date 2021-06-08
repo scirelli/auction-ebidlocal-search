@@ -25,7 +25,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 		for _, wlID := range strings.Split(wl, ",") {
 			body = fmt.Sprintf("%s/user/%s/watchlist/%s", en.ServerUrl, message.User.ID, wlID)
 			if data, err := ioutil.ReadFile(path.Join(en.WatchlistDir, wlID, "index.html")); err == nil {
-				body = strings.Replace(string(data), "&lt;!--{{watchlistName}}--&gt;", wlname, 1)
+				body = strings.Replace(string(data), "<!--{{watchlistName}}-->", wlname, 1)
 			} else {
 				en.Logger.Errorf("Error retrieving wl '%s'", err)
 			}
