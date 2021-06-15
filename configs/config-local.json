@@ -19,6 +19,7 @@
     "runIntervalSeconds": 350
   },
   "notifier": {
-    "serverUrl": "http://ebidlocal.cirelli.org"
+    "serverUrl": "http://ebidlocal.cirelli.org",
+    "email": "b6e051d671451ce4c4db+ebidlocal@gmail.com"
   }
 }

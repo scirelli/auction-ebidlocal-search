@@ -57,11 +57,12 @@ func main() {
 
 	//Any changes found are passed onto a notifier
 	ch, _ := updater.SubscribeForChange()
+	dq := notify.NewDedupeQueue()
 	email := notify.EmailNotify{
 		ServerUrl:    appConfig.Notifier.ServerUrl,
 		Logger:       logger,
 		WatchlistDir: appConfig.Notifier.WatchlistDir,
-		MessageChan:  notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch),
+		MessageChan:  dq.Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch)),
 	}
 	email.Send()
 
