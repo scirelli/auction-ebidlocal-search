@@ -1,0 +1,26 @@
+{
+  "debug": true,
+  "logLevel": "DEBUG",
+  "server": {
+    "port": 8282,
+    "address": "0.0.0.0",
+    "contentPath": ""
+  },
+  "scanner": {
+    "contentPath": "/Users/cirelli/Projects/Steve/auction-ebidlocal-search/build",
+    "dataFileName": "data.json",
+    "scanIntervalSeconds": 60,
+    "asyncRequests": 3
+  },
+  "updater": {
+    "contentPath": "/Users/cirelli/Projects/Steve/auction-ebidlocal-search/build",
+    "batchSize": 5,
+    "runIntervalSeconds": 121,
+    "description": "run Interval is requests (batchSize) per runIntervalSeconds"
+  },
+  "notifier": {
+    "serverUrl": "http://ebidlocal.cirelli.org",
+    "contentPath": "/Users/cirelli/Projects/Steve/auction-ebidlocal-search/build",
+    "email": "b6e051d671451ce4c4db+ebidlocal@gmail.com"
+  }
+}

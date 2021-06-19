@@ -27,7 +27,7 @@ func main() {
 		logger.Fatal(err)
 	}
 	logger.Infof("Cwd '%s'\n", cwd)
-	contentPath = flag.String("content-path", ".", fmt.Sprintf("Base path to save user and watchlist data. Default '%s'", "."))
+	contentPath = flag.String("content-path", "", fmt.Sprintf("Base path to save user and watchlist data. Default '%s'", "."))
 	flag.Parse()
 
 	logger.Infof("config path '%s'\n", *configPath)
@@ -35,8 +35,10 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	appConfig.Scanner.ContentPath = *contentPath
-	appConfig.Updater.ContentPath = *contentPath
+	if *contentPath != "" {
+		appConfig.Scanner.ContentPath = *contentPath
+		appConfig.Updater.ContentPath = *contentPath
+	}
 
 	//scanner produces paths
 	scan := scanner.New(appConfig.Scanner)

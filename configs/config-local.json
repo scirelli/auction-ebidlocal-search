@@ -9,14 +9,13 @@
   "scanner": {
     "contentPath": "",
     "dataFileName": "data.json",
-    "scanIntervalSeconds": 175,
+    "scanIntervalSeconds": 350,
     "asyncRequests": 3
   },
   "updater": {
     "contentPath": "",
     "templateFile": "",
-    "batchSize": 5,
-    "runIntervalSeconds": 350
+    "batchSize": 5
   },
   "notifier": {
     "serverUrl": "http://ebidlocal.cirelli.org",

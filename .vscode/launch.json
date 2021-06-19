@@ -9,9 +9,18 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
+            "env": {"LOGLEVEL":"Debug"},
             "program": "${workspaceFolder}/cmd/server/",
             "args": ["--config-path=${workspaceFolder}/build/configs/config.json"]
-        },
+        }{
+            "name": "Launch Debug Scanner",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "env": {"LOGLEVEL":"Debug"},
+            "program": "${workspaceFolder}/cmd/scanner/",
+            "args": ["--config-path=${workspaceFolder}/build/configs/config-vscode.json"]
+        },,
         {
             "name": "Test Current File",
             "type": "go",

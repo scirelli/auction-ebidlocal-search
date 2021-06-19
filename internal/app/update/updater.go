@@ -1,6 +1,7 @@
 package update
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha1"
 	"fmt"
@@ -10,8 +11,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 
@@ -45,7 +44,6 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 		logger:          logger,
 		template:        t,
 		auctionSearcher: search.AuctionSearchFunc(search.SearchAuctions),
-		watchlistIDs:    make(chan string, config.BatchSize),
 		ctx:             ctx,
 		store:           watchlistStore,
 		changePublsr:    publish.NewStringChange(),
@@ -60,7 +58,6 @@ type Update struct {
 	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
 	store           store.Storer
-	watchlistIDs    chan string
 	ctx             context.Context
 	changePublsr    publish.StringPublisher
 }
@@ -71,127 +68,113 @@ func (u *Update) SetOpenAuctions(openAuctions stringiter.Iterable) *Update {
 	return u
 }
 
-//Update starts the batch update of watch lists, reading from watchlistFilePaths channel and enqueuing them to be updated.
-func (u *Update) Update(watchlistFilePaths <-chan string) error {
-	go u.batchUpdateWatchlists()
-	for path := range watchlistFilePaths {
-		if err := u.EnqueueWatchlistPath(path); err != nil {
-			u.logger.Errorf("%s", err)
-			return err
-		}
-	}
-
-	return nil
-}
-
 //SubscribeForChange returns a channel that can be monitored for changes, it also returns a function to call unsubscribe the channel.
 func (u *Update) SubscribeForChange() (<-chan string, func() error) {
 	return u.changePublsr.Subscribe()
 }
 
-//EnqueueWatchlistPath takes a path to a watch list converts it to an ID and puts it on the watch list update queue.
-func (u *Update) EnqueueWatchlistPath(watchlistFilePath string) error {
-	var id string
-	id = u.watchlistIDFromPath(filepath.Dir(watchlistFilePath))
-	u.logger.Infof("Calling Enqueueing watchlist id: '%s'; path: '%s'", id, watchlistFilePath)
-	u.EnqueueWatchlistID(id)
+//Update starts the batch update of watch lists, reading from watchlistFilePaths channel and enqueuing them to be updated.
+func (u *Update) Update(watchlistFilePaths <-chan string) error {
+	for path := range watchlistFilePaths {
+		select {
+		case <-u.ctx.Done():
+			break
+		default:
+		}
+		if err := u.updateWatchlistContent(watchlistIDFromPath(filepath.Dir(path))); err != nil {
+			u.logger.Error(err)
+			continue
+		}
+	}
 	return nil
 }
 
-//EnqueueWatchlistID takes a watch list id and puts it on the watch list update queue.
-func (u *Update) EnqueueWatchlistID(listID string) {
-	go func(listID string) {
-		u.watchlistIDs <- listID
-	}(listID)
-}
+//updateWatchlistContent determines if a watch list's content has changed, updates that content then publishes that there was a change.
+func (u *Update) updateWatchlistContent(id string) error {
+	var err error
+	var newContent bytes.Buffer
 
-//batchUpdateWatchlists Batch update watch lists. Makes x requests at a time.
-func (u *Update) batchUpdateWatchlists() {
-	u.logger.Info("Batch Updates started.")
-	var runInterval time.Duration = time.Duration(u.config.RunIntervalSeconds) * time.Second
-	for {
-		var wg sync.WaitGroup
-		startTime := time.Now()
-		for i := uint64(0); i < u.config.BatchSize; i++ {
-			id := <-u.watchlistIDs
-			wg.Add(1)
-			go func(id string) {
-				defer wg.Done()
-				if err := u.updateWatchlistResults(id); err != nil {
-					return
-				}
-				u.notifyOnChange(id)
-			}(id)
-		}
-		wg.Wait()
-		if elaspsedTime := time.Since(startTime); elaspsedTime < runInterval {
-			time.Sleep(runInterval - elaspsedTime)
-		}
-	}
-}
-
-//updateWathclistResults loads a watch list, makes a request to ebid for new search results.
-func (u *Update) updateWatchlistResults(id string) error {
 	u.logger.Infof("Updating watch list id: '%s'", id)
+	if err = u.searchAuctionForWatchlist(id, &newContent); err != nil {
+		return err
+	}
+	contentID := u.getSavedContentId(id)
+	newContentID := getContentId(bytes.NewReader(newContent.Bytes()))
+	if contentID == newContentID {
+		return nil
+	}
 
-	watchlist, err := u.store.LoadWatchlist(context.Background(), id)
+	u.saveContent(id, bytes.NewReader(newContent.Bytes()))
+	u.saveContentHash(id, newContentID)
+	u.changePublsr.Publish(id)
+
+	return nil
+}
+
+func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
+	watchlist, err := u.store.LoadWatchlist(u.ctx, id)
 	if err != nil {
 		u.logger.Error(err)
 		return err
 	}
 
-	if file, err := os.Create(u.watchlistDataFilePathFromID(id)); err == nil {
-		defer file.Close()
-		if err := u.template.Execute(file, struct {
-			Rows          chan string
-			WatchlistLink string
-			WatchlistName string
-		}{
-			Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
-			WatchlistLink: u.config.ServerUrl + "/watchlist/" + id,
-			WatchlistName: "<!--{{watchlistName}}-->",
-		}); err != nil {
-			u.logger.Error(err)
-			return err
-		}
-		u.logger.Info("Generate file ID")
-	} else {
-		u.logger.Error(err)
+	if err := u.template.Execute(out, struct {
+		Rows          chan string
+		WatchlistLink string
+		WatchlistName string
+	}{
+		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
+		WatchlistLink: u.config.ServerUrl + "/watchlist/" + id,
+		WatchlistName: "<!--{{watchlistName}}-->",
+	}); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *Update) notifyOnChange(watchlistID string) {
-	var resultID string
+func (u *Update) saveContent(watchlistID string, content io.Reader) error {
+	var file *os.File
 	var err error
 
-	if resultID, err = u.getResultID(u.watchlistDataFilePathFromID(watchlistID)); err != nil {
-		u.logger.Errorf("Failed to check for changes. '%s'", err)
-		return
+	if file, err = os.Create(u.watchlistDataFilePathFromID(watchlistID)); err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, content)
+	return err
+}
+
+func (u *Update) saveContentHash(watchlistID string, contentHash string) error {
+	var file *os.File
+	var err error
+
+	if file, err = os.OpenFile(u.watchlistHashFilePathFromID(watchlistID), os.O_RDWR|os.O_CREATE, 0644); err != nil {
+		return err
+	}
+	defer file.Close()
+	if cnt, err := file.WriteAt([]byte(contentHash), 0); err != nil || cnt != len(contentHash) {
+		return err
 	}
 
-	if file, err := os.OpenFile(u.watchlistHashFilePathFromID(watchlistID), os.O_RDWR|os.O_CREATE, 0644); err == nil {
-		defer file.Close()
-		shaLength := 40
-		buf := make([]byte, shaLength)
-		if cnt, err := file.Read(buf); err != nil && err != io.EOF {
-			u.logger.Errorf("Bytes read: '%d'; '%s'", cnt, err)
-			return
-		}
-		if resultID != string(buf) {
-			u.logger.Infof("There was a change '%s' != '%s'", resultID, string(buf))
-			if cnt, err := file.WriteAt([]byte(resultID), 0); err != nil || cnt != len(resultID) {
-				u.logger.Errorf("Bytes written: '%d'; '%s'", cnt, err)
-				return
-			}
-			u.changePublsr.Publish(watchlistID)
-		}
-	} else {
+	return nil
+}
+
+func (u *Update) getSavedContentId(watchlistID string) string {
+	var file *os.File
+	var err error
+	if file, err = os.OpenFile(u.watchlistHashFilePathFromID(watchlistID), os.O_RDWR|os.O_CREATE, 0644); err != nil {
 		u.logger.Error(err)
-		return
+		return ""
 	}
+	defer file.Close()
+	shaLength := 40
+	buf := make([]byte, shaLength)
+	if cnt, err := file.Read(buf); err != nil && err != io.EOF {
+		u.logger.Errorf("Bytes read: '%d'; '%s'", cnt, err)
+		return ""
+	}
+	return string(buf)
 }
 
 func (u *Update) watchlistPathFromID(watchlistID string) string {
@@ -206,37 +189,29 @@ func (u *Update) watchlistHashFilePathFromID(watchlistID string) string {
 	return filepath.Join(u.config.WatchlistDir, watchlistID, "hash")
 }
 
-func (u *Update) watchlistIDFromPath(watchlistFilePath string) string {
+func watchlistIDFromPath(watchlistFilePath string) string {
 	_, file := filepath.Split(watchlistFilePath)
-	u.logger.Infof("Getting id from path '%s' - '%s'", watchlistFilePath, file)
 	return file
 }
 
-func (u *Update) buildItemIdSlice(path string) ([]string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return []string{}, err
-	}
-	defer f.Close()
-
-	doc, err := goquery.NewDocumentFromReader(f)
-	if err != nil {
-		return []string{}, err
-	}
-
-	return doc.Find("#DataTable tbody tr").Map(func(_ int, s *goquery.Selection) string {
-		return s.AttrOr("id", "")
-	}), nil
-}
-
-func (u *Update) getResultID(path string) (string, error) {
-	ids, err := u.buildItemIdSlice(path)
-	if err != nil || len(ids) == 0 {
-		return "", err
+func getContentId(content io.Reader) string {
+	ids := buildItemIdSlice(content)
+	if len(ids) == 0 {
+		return ""
 	}
 
 	sort.Strings(ids)
 	hash := fmt.Sprintf("%x", sha1.Sum([]byte(strings.Join(ids, ""))))
-	//u.logger.Debugf("Watchlist (%s) at '%s' has ids '%s'", hash, path, strings.Join(ids, ", "))
-	return hash, nil
+	return hash
+}
+
+func buildItemIdSlice(content io.Reader) []string {
+	doc, err := goquery.NewDocumentFromReader(content)
+	if err != nil {
+		return []string{}
+	}
+
+	return doc.Find("#DataTable tbody tr").Map(func(_ int, s *goquery.Selection) string {
+		return s.AttrOr("id", "")
+	})
 }

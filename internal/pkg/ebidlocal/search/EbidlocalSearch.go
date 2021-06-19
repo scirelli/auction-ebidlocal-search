@@ -9,20 +9,24 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 )
 
 const (
+	AuctionSite string = "https://auction.ebidlocal.com"
 	//SearchURL url to to append auction id to to search for items.
-	SearchURL    string = "https://auction.ebidlocal.com/cgi-bin/mmlist.cgi"
-	requestDelay        = 1
-	maxRetries          = 3
+	SearchURL             string = AuctionSite + "/cgi-bin/mmlist.cgi"
+	requestDelay                 = 1
+	maxRetries                   = 3
+	maxConcurrentRequests        = 5
 )
+
+var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
 
 type AuctionSearcher interface {
 	Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
@@ -35,8 +39,6 @@ func (as AuctionSearchFunc) Search(keywords stringiter.Iterable, auctions string
 }
 
 func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan string) {
-	var offset time.Duration
-	var wg sync.WaitGroup
 	var keywords []string
 	var iter stringiter.Iterator = keywordIter.Iterator()
 	results = make(chan string)
@@ -46,20 +48,18 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 	}
 
 	iter = openAuctions.Iterator()
-	for auction, done := iter.Next(); done; auction, done = iter.Next() {
-		wg.Add(1)
-		go func(auction string, offset time.Duration) {
-			defer wg.Done()
-			time.Sleep(offset)
-			//log.Printf("Searching auction '%s'", auction)
-			if html, err := SearchAuction(auction, keywords); err == nil {
-				results <- html
-			}
-		}(auction, offset)
-		offset += time.Second * requestDelay
-	}
-
 	go func() {
+		var wg sync.WaitGroup
+		for auction, done := iter.Next(); done; auction, done = iter.Next() {
+			wg.Add(1)
+			throttle(func(v ...interface{}) {
+				defer wg.Done()
+				var auction string = v[0].(string)
+				if html, err := SearchAuction(auction, keywords); err == nil {
+					results <- html
+				}
+			}, auction)
+		}
 		wg.Wait()
 		close(results)
 	}()
@@ -114,7 +114,7 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 func fullyQualifyLinks(doc *goquery.Document) *goquery.Document {
 	doc.Find("#DataTable tbody tr td.item a").Each(func(i int, s *goquery.Selection) {
 		if partial, exists := s.Attr("href"); exists {
-			s.SetAttr("href", "https://auction.ebidlocal.com"+partial)
+			s.SetAttr("href", AuctionSite+partial)
 		}
 	})
 	return doc

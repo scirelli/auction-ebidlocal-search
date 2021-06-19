@@ -9,8 +9,12 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
+const (
+	publishTTL = 100 * time.Millisecond
+)
+
 //New create a new string Publisher.
-func NewStringChange() StringPublisher {
+func NewStringChange() *StringChange {
 	var logger = log.New("Publisher", log.DEFAULT_LOG_LEVEL)
 	return &StringChange{
 		logger: logger,
@@ -59,8 +63,7 @@ func (l *StringChange) Publish(s string) {
 	defer l.mu.RUnlock()
 	l.mu.RLock()
 	for _, c := range l.listeners {
-		duration := 50 * time.Millisecond
-		ctx, cancel := context.WithTimeout(context.Background(), duration)
+		ctx, cancel := context.WithTimeout(context.Background(), publishTTL)
 		go func(ctx context.Context, c chan<- string, cancel context.CancelFunc) {
 			select {
 			case c <- s:

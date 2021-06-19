@@ -31,7 +31,10 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	appConfig.Server.ContentPath = *contentPath
+	if *contentPath != "" {
+		appConfig.Server.ContentPath = *contentPath
+	}
+
 	fsStore := ebidfsstore.NewWatchlistStore(ebidfsstore.StoreConfig{
 		WatchlistDir: appConfig.Server.WatchlistDir,
 	}, logger)

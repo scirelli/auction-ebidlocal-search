@@ -38,7 +38,7 @@ func Defaults(config *Config) *Config {
 		logger.Infof("Defaulting content path dir to '%s'\n", config.ContentPath)
 	}
 	if config.TemplateFile == "" {
-		config.TemplateFile = filepath.Join("./", "assets", "templates", "template.html.tmpl")
+		config.TemplateFile = filepath.Join(config.ContentPath, "assets", "templates", "template.html.tmpl")
 		logger.Infof("Defaulting template dir to '%s'\n", config.TemplateFile)
 	}
 	if config.DataFileName == "" {
@@ -54,10 +54,6 @@ func Defaults(config *Config) *Config {
 		logger.Infof("Defaulting batch size '%d\n", config.BatchSize)
 	}
 
-	if config.RunIntervalSeconds <= 0 {
-		config.RunIntervalSeconds = 10
-		logger.Infof("Defaulting run interval '%d\n", config.RunIntervalSeconds)
-	}
 	if config.ServerUrl == "" {
 		config.ServerUrl = "http://localhost:8282"
 		logger.Infof("Defaulting ServerUrl to '%s'\n", config.ServerUrl)
@@ -69,11 +65,10 @@ func Defaults(config *Config) *Config {
 //Config for update app
 type Config struct {
 	//ContentPath all config paths should be relative to the content path.
-	ContentPath        string `json:"contentPath"`
-	TemplateFile       string `json:"templateFile"`
-	DataFileName       string `json:"dataFileName"`
-	WatchlistDir       string `json:"watchlistDir"`
-	BatchSize          uint64 `json:"batchSize"`
-	RunIntervalSeconds uint64 `json:"runIntervalSeconds"`
-	ServerUrl          string `json:"serverUrl"`
+	ContentPath  string `json:"contentPath"`
+	TemplateFile string `json:"templateFile"`
+	DataFileName string `json:"dataFileName"`
+	WatchlistDir string `json:"watchlistDir"`
+	BatchSize    uint64 `json:"batchSize"`
+	ServerUrl    string `json:"serverUrl"`
 }
