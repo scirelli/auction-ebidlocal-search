@@ -31,11 +31,9 @@ copy_configs: configs
 	@mkdir -p ./build/configs
 	@cp -r ./configs/*.json ./build/configs/ || :
 
-copy_web: web
+copy_web:
 	@mkdir -p ./build/web/user
 	@mkdir -p ./build/web/watchlists
-	@cp -r ./web/user_templates/ ./build/template/
-	@cp -r ./web/static/ ./build/web/static
 
 copy_assets: assets
 	@cp -r ./assets ./build/
@@ -52,7 +50,7 @@ requestNewUser: ## Create a new user, for testing
 
 .PHONY: requestNewWatchlist
 requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
-	@EBID_USER=$$(cat /tmp/user.id) ; \
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
 	curl --request POST \
 		--include \
 		--location \
@@ -63,7 +61,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 
 .PHONY: requestNewWatchlist2
 requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
-	@EBID_USER=$$(cat /tmp/user.id) ; \
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
 	curl --request POST \
 		--include \
 		--location \
