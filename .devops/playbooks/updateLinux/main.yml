@@ -1,0 +1,18 @@
+---
+- name: Update Linux
+  host: all
+  become: true
+
+  tasks:
+    - name: Update repositories cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    -name: Update the all packages
+      apt:
+        upgrade: full
+
+    - name: Remove dependencies that are no longer required
+      apt:
+        autoremove: yes
