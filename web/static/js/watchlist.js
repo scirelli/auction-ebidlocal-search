@@ -8,7 +8,7 @@
  * Create User
  *     POST /user
  *
- * Get user data 
+ * Get user data
  *     GET /user/{userID}/data.json
  *
  * Get static files

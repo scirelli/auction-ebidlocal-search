@@ -1,0 +1,22 @@
+form#createWatchlistForm input{
+    display: block;
+}
+form#createWatchlistForm input#addKeyword {
+    display: inline-block;
+    margin-left: 5px;
+}
+form#createWatchlistForm input#keyword {
+    display: inline-block;
+}
+form input.invalid {
+    border: 1px solid #FF5555;
+    background-color: #FFDDDD;
+}
+
+form .error {
+    color: #FF0000;
+}
+
+.hidden {
+    display: none;
+}

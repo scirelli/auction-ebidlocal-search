@@ -1,44 +1,33 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html class="no-js" lang="EN">
     <head>
-        <script type="module" src="js/main.js"></script>
+        <meta charset="utf-8"/>
+        <meta name="description" content="Create a new Ebidlocal watch list for the given user."/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta name="theme-color" content="#000000"/>
+
+        <title>Create Ebidlocal Watch list</title>
+
+        <link rel="stylesheet" href="css/main.css"/>
+        <link rel="icon" href="img/favicon.ico"/>
+        <link rel="apple-touch-icon-precomposed" href="img/icon-32.png"/>
+
         <noscript>
-            <style>
-                .noscript {
-                    display: none;
-                }
-            </style>
+           <style>
+               .noscript {
+                   display: none;
+               }
+           </style>
         </noscript>
-        <style>
-            form#createWatchlistForm input{
-                display: block;
-            }
-            form#createWatchlistForm input#addKeyword {
-                display: inline-block;
-                margin-left: 5px;
-            }
-            form#createWatchlistForm input#keyword {
-                display: inline-block;
-            }
-            form input.invalid {
-                border: 1px solid #FF5555;
-                background-color: #FFDDDD;
-            }
 
-            form .error {
-                color: #FF0000;
-            }
-
-            .hidden {
-                display: none;
-            }
-        </style>
+        <script type="module" src="js/main.js"></script>
     </head>
     <body>
         <p>
         The <a href="https://www.ebidlocal.com/">Ebidlocal</a> search is very limited. It does not allow any special characters or phrases (such as "cd player"). Therefore keywords you enter here should be single words.
         </p>
         <noscript>
-            <section class="noscript">
+            <section>
                 <form action="/api/create-watch-list" method="post">
                     <label for="user">User:</label>
                     <input type="text" name="user" placeholder="User id" title="If no user id is entered a new one will be generated for you."/><br/>
@@ -77,7 +66,7 @@
                 <hr/>
 
                 <input type="submit" value="Submit"/>
-                <span class="submit error hidden"></span>
+                <span class="submit error hidden">&nbsp;</span>
             </form>
         </section>
     </body>
