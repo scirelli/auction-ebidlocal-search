@@ -69,7 +69,7 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 		http.StripPrefix(rm, http.FileServer(http.Dir(d))).ServeHTTP(w, r)
 	})).Name("getUserWatchlist")
 
-	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserHandlerFunc), "application/json"))
+	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserHandlerFunc), "application/json")).Name("createUser")
 
 	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
 
@@ -95,11 +95,11 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err = decoder.Decode(&user); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		respondError(w, http.StatusBadRequest, "User data is required")
 		return
 	}
 	if !user.IsValid() {
-		respondError(w, http.StatusBadRequest, "User name is required.")
+		respondError(w, http.StatusBadRequest, "User name and email are required.")
 		return
 	}
 

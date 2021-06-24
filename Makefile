@@ -31,9 +31,10 @@ copy_configs: configs
 	@mkdir -p ./build/configs
 	@cp -r ./configs/*.json ./build/configs/ || :
 
-copy_web:
+copy_web: web
 	@mkdir -p ./build/web/user
 	@mkdir -p ./build/web/watchlists
+	@cp -r ./web/static/ ./build/web/static
 
 copy_assets: assets
 	@cp -r ./assets ./build/

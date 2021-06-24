@@ -41,7 +41,7 @@ func (u User) String() string {
 
 //IsValid validate user data.
 func (u User) IsValid() bool {
-	return u.Name != ""
+	return u.Name != "" && u.Email != ""
 }
 
 func generateID() (string, error) {
