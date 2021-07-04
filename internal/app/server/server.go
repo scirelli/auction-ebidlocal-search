@@ -56,10 +56,15 @@ func (s *Server) registerHTTPHandlers() {
 	http.Handle("/", loggedRouter)
 }
 
+/*
+Notes:
+	Routes are tested in the order they were added to the router. If two routes match, the first one wins:
+*/
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	router.Path("/{userID}/watchlist").Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlistHandlerFunc), "application/json")).Name("createWatchlist")
 
-	router.Path("/{userID}/watchlist/{listID}").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Path("/{userID}/data.json").Methods("GET").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
+	router.PathPrefix("/{userID}/watchlist/{listID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		userID := params["userID"]
 		listID := params["listID"]
@@ -71,9 +76,7 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserHandlerFunc), "application/json")).Name("createUser")
 
-	router.PathPrefix("/{userID}/data.json").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
-
-	router.PathPrefix("/{userID}/").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/{userID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := mux.Vars(r)["userID"]
 		d := filepath.Join(s.config.UserDir, fmt.Sprintf("/%s/static", userID))
 		rm := fmt.Sprintf("/user/%s/", userID)
