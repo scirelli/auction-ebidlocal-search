@@ -62,6 +62,7 @@ Notes:
 */
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	router.Path("/{userID}/watchlist").Methods("POST", "UPDATE").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlistHandlerFunc), "application/json")).Name("createAndEditWatchlist")
+	router.Path("/{userID}/watchlist").Methods("DELETE").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.deleteUserWatchlistHandlerFunc), "application/json")).Name("deleteWatchlist")
 
 	router.Path("/{userID}/data.json").Methods("GET").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
 	router.PathPrefix("/{userID}/watchlist/{listID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +156,32 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 	}{WatchlistID: listID})
 }
 
+func (s *Server) deleteUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	var wl Watchlist
+
+	userID := mux.Vars(r)["userID"]
+
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&wl); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if wl.Name == "" {
+		respondError(w, http.StatusBadRequest, "Watch list name is required")
+		return
+	}
+
+	err := s.deleteUserWatchlist(r.Context(), userID, &wl)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to delete watch list")
+		return
+	}
+
+	s.logger.Infof("Delete watch list called '%s'", wl.Name)
+	respondJSON(w, http.StatusNoContent, "Deleted")
+}
+
 func (s *Server) createUserSpace(u *User) (string, error) {
 	var userDir string = filepath.Join(s.config.UserDir, u.ID)
 
@@ -197,6 +224,21 @@ func (s *Server) addUserWatchlist(ctx context.Context, userID string, list *Watc
 	}
 
 	return listID, nil
+}
+
+//deleteUserWatchlist delete a watch list from a user's group of watch lists.
+func (s *Server) deleteUserWatchlist(ctx context.Context, userID string, list *Watchlist) error {
+	user, err := s.store.LoadUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	delete(user.Watchlists, list.Name)
+	if _, err = s.store.SaveUser(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // respondJSON makes the response with payload as json format
