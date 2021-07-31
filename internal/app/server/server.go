@@ -61,7 +61,7 @@ Notes:
 	Routes are tested in the order they were added to the router. If two routes match, the first one wins:
 */
 func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
-	router.Path("/{userID}/watchlist").Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlistHandlerFunc), "application/json")).Name("createWatchlist")
+	router.Path("/{userID}/watchlist").Methods("POST", "UPDATE").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlistHandlerFunc), "application/json")).Name("createAndEditWatchlist")
 
 	router.Path("/{userID}/data.json").Methods("GET").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
 	router.PathPrefix("/{userID}/watchlist/{listID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
