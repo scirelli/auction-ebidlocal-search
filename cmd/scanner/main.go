@@ -42,7 +42,6 @@ func main() {
 
 	//scanner produces paths
 	scan := scanner.New(appConfig.Scanner)
-	go scan.Scan(ctx)
 
 	//Updater subscribes to the paths and checks for changes
 	updater := update.New(ctx,
@@ -55,7 +54,6 @@ func main() {
 		appConfig.Updater)
 	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())
 	pathsChan, _ := scan.SubscribeForPath()
-	go updater.Update(pathsChan)
 
 	//Any changes found are passed onto a notifier
 	ch, _ := updater.SubscribeForChange()
@@ -66,6 +64,9 @@ func main() {
 		WatchlistDir: appConfig.Notifier.WatchlistDir,
 		MessageChan:  dq.Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch)),
 	}
+
+	go scan.Scan(ctx)
+	go updater.Update(pathsChan)
 	email.Send()
 
 	cancel()

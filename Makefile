@@ -40,7 +40,7 @@ copy_assets: assets
 	@cp -r ./assets ./build/
 
 /tmp/user.id:
-	$(MAKE) requestNewUser
+	@$(MAKE) requestNewUser
 
 requestNewUser: ## Create a new user, for testing
 	@curl --request POST \

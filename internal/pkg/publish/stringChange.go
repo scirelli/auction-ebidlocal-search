@@ -10,22 +10,23 @@ import (
 )
 
 const (
-	publishTTL = 100 * time.Millisecond
+	defaultPublishTTL = 50 * time.Millisecond
 )
 
 //New create a new string Publisher.
 func NewStringChange() *StringChange {
-	var logger = log.New("Publisher", log.DEFAULT_LOG_LEVEL)
 	return &StringChange{
-		logger: logger,
+		logger:     log.New("Publisher", log.DEFAULT_LOG_LEVEL),
+		PublishTTL: defaultPublishTTL,
 	}
 }
 
 //StringChange implements the Notifiers interface.
 type StringChange struct {
-	listeners []chan<- string
-	mu        sync.RWMutex
-	logger    log.Logger
+	listeners  []chan<- string
+	mu         sync.RWMutex
+	logger     log.Logger
+	PublishTTL time.Duration
 }
 
 //Subscribe creates a channel to listen for string changes, returns that channel and a function to unsubscribe it.
@@ -63,7 +64,7 @@ func (l *StringChange) Publish(s string) {
 	defer l.mu.RUnlock()
 	l.mu.RLock()
 	for _, c := range l.listeners {
-		ctx, cancel := context.WithTimeout(context.Background(), publishTTL)
+		ctx, cancel := context.WithTimeout(context.Background(), l.PublishTTL)
 		go func(ctx context.Context, c chan<- string, cancel context.CancelFunc) {
 			select {
 			case c <- s:
