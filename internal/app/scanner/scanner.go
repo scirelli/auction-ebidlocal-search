@@ -42,7 +42,7 @@ func (s *Scanner) Scan(ctx context.Context) error {
 	for {
 		startTime := time.Now()
 
-		if err := filepath.Walk(watchlistDir, s.walkCalback); err != nil {
+		if err := filepath.WalkDir(watchlistDir, s.walkCalback); err != nil {
 			s.logger.Errorf("Error walking the path %q: %v\n", watchlistDir, err)
 		}
 
