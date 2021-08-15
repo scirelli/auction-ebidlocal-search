@@ -3,7 +3,6 @@ package ebidlocal
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,6 +14,7 @@ import (
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
 const (
@@ -27,6 +27,11 @@ const (
 )
 
 var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
+var logger log.Logger
+
+func init() {
+	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
+}
 
 type AuctionSearcher interface {
 	Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
@@ -70,6 +75,7 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 func SearchAuction(auction string, keywords []string) (html string, err error) {
 	var res *http.Response
 
+	logger.Debugf("Searching... URL '%s'; auction '%s'; keywords '%s'", SearchURL, auction, keywords)
 	res, err = ebid.Client.PostForm(SearchURL, url.Values{
 		"auction": {auction},
 		"keyword": {strings.Join(keywords, " ")},
@@ -77,20 +83,20 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 		"search":  {"Go!"},
 	})
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 		return html, err
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
+		logger.Errorf("status code error: %d %s", res.StatusCode, res.Status)
 		return html, err
 	}
 
 	doc, err := goquery.NewDocumentFromResponse(res)
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 		return html, err
 	}
 	if os.Getenv("DEBUG") != "" {

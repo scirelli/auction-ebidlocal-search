@@ -49,13 +49,13 @@ func (wl *WatchlistStore) DeleteWatchlist(ctx context.Context, watchlistID strin
 func (wl *WatchlistStore) addWatchlist(list watchlist.Watchlist) error {
 	var watchlistDir = filepath.Join(wl.config.WatchlistDir, list.ID())
 
-	wl.logger.Infof("Checking for '%s'\n", watchlistDir)
+	wl.logger.Infof("WatchlistStore.addWatchlist: Checking for '%s'\n", watchlistDir)
 	if _, err := os.Stat(watchlistDir); os.IsExist(err) {
-		wl.logger.Info("Watch list already exists.")
+		wl.logger.Info("WatchlistStore.addWatchlist: Watch list already exists.")
 		return nil
 	}
 
-	wl.logger.Infof("Creating watchlist. '%s'", watchlistDir)
+	wl.logger.Infof("WatchlistStore.addWatchlist: Creating watchlist. '%s'", watchlistDir)
 	if err := os.MkdirAll(watchlistDir, 0775); err != nil {
 		wl.logger.Error(err)
 		return err
@@ -87,6 +87,6 @@ func (wl *WatchlistStore) loadWatchlist(filePath string) (watchlist.Watchlist, e
 		wl.logger.Error(err)
 		return watchlist, err
 	}
-	wl.logger.Info("Watch list found '%v'", watchlist)
+	wl.logger.Infof("WatchlistStore.loadWatchlist: Watch list found '%v'", watchlist)
 	return watchlist, nil
 }

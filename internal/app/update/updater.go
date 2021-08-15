@@ -78,6 +78,7 @@ func (u *Update) Update(watchlistFilePaths <-chan string) error {
 	for path := range watchlistFilePaths {
 		select {
 		case <-u.ctx.Done():
+			u.logger.Debug("Update.Update: ctx done, ending update checks.")
 			break
 		default:
 		}
@@ -94,18 +95,22 @@ func (u *Update) updateWatchlistContent(id string) error {
 	var err error
 	var newContent bytes.Buffer
 
-	u.logger.Infof("Updating watch list id: '%s'", id)
+	u.logger.Infof("Updater.updateWatchlistContent: Checking watch list id: '%s'", id)
 	if err = u.searchAuctionForWatchlist(id, &newContent); err != nil {
+		u.logger.Errorf("Updater.updateWatchlistContent: '%s'", err)
 		return err
 	}
 	contentID := u.getSavedContentId(id)
 	newContentID := getContentId(bytes.NewReader(newContent.Bytes()))
 	if contentID == newContentID {
+		u.logger.Debugf("Updater.updateWatchlistContent: No changes for id('%s')", contentID)
 		return nil
 	}
 
+	u.logger.Debugf("Updater.updateWatchlistContent: There was a change to watch list: '%s'", id)
 	u.saveContent(id, bytes.NewReader(newContent.Bytes()))
 	u.saveContentHash(id, newContentID)
+	u.logger.Debugf("Updater.updateWatchlistContent: Publishing change for: '%s'", id)
 	u.changePublsr.Publish(id)
 
 	return nil
@@ -124,7 +129,7 @@ func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
 		WatchlistName string
 	}{
 		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
-		WatchlistLink: u.config.ServerUrl + "/watchlist/" + id,
+		WatchlistLink: "__watchlistLink__", //u.config.ServerUrl + "/watchlist/" + id,
 		WatchlistName: "<!--{{watchlistName}}-->",
 	}); err != nil {
 		return err

@@ -2,7 +2,7 @@ package scanner
 
 import (
 	"context"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"time"
 
@@ -58,13 +58,13 @@ func (s *Scanner) Scan(ctx context.Context) error {
 	}
 }
 
-func (s *Scanner) walkCalback(path string, info os.FileInfo, err error) error {
+func (s *Scanner) walkCalback(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		s.logger.Infof("prevent panic by handling failure accessing a path %q: %v\n", path, err)
 		return err
 	}
-	if info.Name() == s.config.DataFileName {
-		s.logger.Infof("Found file: %q\n", path)
+	if d.Name() == s.config.DataFileName {
+		s.logger.Infof("Scan.walkCallback: Found file: %q\n", path)
 		s.changePublsr.Publish(path)
 	}
 

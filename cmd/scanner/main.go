@@ -56,13 +56,13 @@ func main() {
 	pathsChan, _ := scan.SubscribeForPath()
 
 	//Any changes found are passed onto a notifier
-	ch, _ := updater.SubscribeForChange()
+	watchlistChangeEvent, _ := updater.SubscribeForChange()
 	dq := notify.NewDedupeQueue()
 	email := notify.EmailNotify{
 		ServerUrl:    appConfig.Notifier.ServerUrl,
 		Logger:       logger,
 		WatchlistDir: appConfig.Notifier.WatchlistDir,
-		MessageChan:  dq.Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(ch)),
+		MessageChan:  dq.Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(watchlistChangeEvent)),
 	}
 
 	go scan.Scan(ctx)
