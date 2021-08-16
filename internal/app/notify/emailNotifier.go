@@ -42,7 +42,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {
 			//body = fmt.Sprintf("%s/user/%s/watchlist/%s", en.ServerUrl, message.User.ID, wlID)
-			wllink = fmt.Sprintf("%s/viewwatchlists.html?id=%s#%s", en.ServerUrl, url.QueryEscape(message.User.ID), startWithNumbers.ReplaceAllString(cssValidCharacters.ReplaceAllString(wlID, ""), ""))
+			wllink = fmt.Sprintf("%s/viewwatchlists.html?id=%s#%s", en.ServerUrl, url.QueryEscape(message.User.ID), startWithNumbers.ReplaceAllString(cssValidCharacters.ReplaceAllString(wlname+"_"+wlID, ""), ""))
 			body = wllink
 			if data, err := ioutil.ReadFile(path.Join(en.WatchlistDir, wlID, "index.html")); err == nil {
 				//en.Logger.Debugf("Email TEMPLATE \n\n%s\n\n", string(data))
