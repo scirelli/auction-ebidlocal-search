@@ -47,7 +47,7 @@ func (s *UserStore) LoadUser(ctx context.Context, userID string) (*User, error) 
 	var userDataFile string = filepath.Join(s.baseUserDir, userID, s.dataFileName)
 
 	if _, err := os.Stat(userDataFile); os.IsNotExist(err) {
-		s.logger.Info("User does not exist")
+		s.logger.Error("User does not exist")
 		return nil, err
 	}
 

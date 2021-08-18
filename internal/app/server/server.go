@@ -135,17 +135,22 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&wl); err != nil {
+		s.logger.Error(err)
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	if !wl.IsValid() {
+		s.logger.Error("User watchlist is required.")
 		respondError(w, http.StatusBadRequest, "User watchlist is required.")
 		return
 	}
 
 	listID, err := s.addUserWatchlist(r.Context(), userID, &wl)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create watch list")
+	if os.IsNotExist(err) {
+		respondError(w, http.StatusNotFound, "Unknown User")
+		return
+	} else if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to create watch list.")
 		return
 	}
 
