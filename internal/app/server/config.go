@@ -32,7 +32,7 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("ServerConfig", log.DEFAULT_LOG_LEVEL)
+	var logger = log.New("ServerConfig", config.LogLevel)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
@@ -61,4 +61,7 @@ type Config struct {
 	UserDir      string `json:"userDir"`
 	DataFileName string `json:"dataFileName"`
 	WatchlistDir string `json:"watchlistDir"`
+
+	Debug    bool         `json:"debug"`
+	LogLevel log.LogLevel `json:"logLevel"`
 }

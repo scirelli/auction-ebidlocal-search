@@ -31,7 +31,7 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("Scanner:Config:Defaults", log.DEFAULT_LOG_LEVEL)
+	var logger = log.New("Scanner:Config:Defaults", config.LogLevel)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
@@ -59,4 +59,7 @@ type Config struct {
 	DataFileName string `json:"dataFileName"`
 	WatchlistDir string `json:"watchlistDir"`
 	ScanInterval int64  `json:"scanIntervalSeconds"`
+
+	Debug    bool         `json:"debug"`
+	LogLevel log.LogLevel `json:"logLevel"`
 }

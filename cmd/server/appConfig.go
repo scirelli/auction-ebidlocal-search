@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
 //LoadConfig a config file.
@@ -25,6 +26,12 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 
 	json.Unmarshal(byteValue, &config)
 
+	if config.LogLevel == "" {
+		config.Server.LogLevel = log.DEFAULT_LOG_LEVEL
+	} else {
+		config.Server.LogLevel = log.GetLevel(config.LogLevel)
+	}
+
 	server.Defaults(&config.Server)
 
 	return &config, nil
@@ -32,5 +39,7 @@ func LoadConfig(fileName string) (*AppConfig, error) {
 
 //AppConfig configuration data for entire application.
 type AppConfig struct {
-	Server server.Config `json:"server"`
+	Debug    bool          `json:"debug"`
+	LogLevel string        `json:"logLevel"`
+	Server   server.Config `json:"server"`
 }

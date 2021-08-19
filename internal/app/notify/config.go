@@ -31,7 +31,7 @@ func LoadConfig(fileName string) (*Config, error) {
 }
 
 func DefaultConfig(config *Config) *Config {
-	var logger = log.New("Notifier:Config:Defaults", log.DEFAULT_LOG_LEVEL)
+	var logger = log.New("Notifier:Config:Defaults", config.LogLevel)
 
 	if config == nil {
 		config = &Config{}
@@ -72,4 +72,7 @@ type Config struct {
 	ServerUrl    string `json:"serverUrl"`
 	Type         string `json:"type"`
 	WatchlistDir string `json:"watchlistDir"`
+
+	Debug    bool         `json:"debug"`
+	LogLevel log.LogLevel `json:"logLevel"`
 }

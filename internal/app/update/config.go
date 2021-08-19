@@ -31,7 +31,7 @@ func Load(fileName string) (*Config, error) {
 }
 
 func Defaults(config *Config) *Config {
-	var logger = log.New("Update:Config:Defaults", log.DEFAULT_LOG_LEVEL)
+	var logger = log.New("Update:Config:Defaults", config.LogLevel)
 
 	if config.ContentPath == "" {
 		config.ContentPath = "."
@@ -71,4 +71,7 @@ type Config struct {
 	WatchlistDir string `json:"watchlistDir"`
 	BatchSize    uint64 `json:"batchSize"`
 	ServerUrl    string `json:"serverUrl"`
+
+	Debug    bool         `json:"debug"`
+	LogLevel log.LogLevel `json:"logLevel"`
 }

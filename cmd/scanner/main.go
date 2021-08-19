@@ -35,6 +35,9 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	logger.LogLevel = log.GetLevel(appConfig.LogLevel)
+	logger.Infof("Log level is set to: '%s'", logger.LogLevel)
+
 	if *contentPath != "" {
 		appConfig.Scanner.ContentPath = *contentPath
 		appConfig.Updater.ContentPath = *contentPath
@@ -49,7 +52,7 @@ func main() {
 			storefs.NewWatchlistStore(storefs.StoreConfig{
 				WatchlistDir: appConfig.Updater.WatchlistDir,
 				DataFileName: appConfig.Updater.DataFileName,
-			}, log.New("Updater.FSStore", log.DEFAULT_LOG_LEVEL)),
+			}, log.New("Updater.FSStore", appConfig.Scanner.LogLevel)),
 		},
 		appConfig.Updater)
 	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())

@@ -203,7 +203,7 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = os.Symlink(filepath.Join(absContentPath, "template"), filepath.Join(userDir, "static"))
+	err = os.Symlink(filepath.Join(absContentPath, "web", "static"), filepath.Join(userDir, "static"))
 	if err != nil {
 		return "", err
 	}

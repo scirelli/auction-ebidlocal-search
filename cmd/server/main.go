@@ -31,10 +31,12 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	logger.LogLevel = log.GetLevel(appConfig.LogLevel)
+	logger.Infof("Log level is set to: '%s'", logger.LogLevel)
+
 	if *contentPath != "" {
 		appConfig.Server.ContentPath = *contentPath
 	}
-
 	fsStore := ebidfsstore.NewWatchlistStore(ebidfsstore.StoreConfig{
 		WatchlistDir: appConfig.Server.WatchlistDir,
 	}, logger)
@@ -45,6 +47,6 @@ func main() {
 			storefs.NewUserStore(appConfig.Server.UserDir, appConfig.Server.DataFileName, logger),
 			storefs.NewWatchlistStore(fsStore, logger),
 		},
-		log.New("Server", log.DEFAULT_LOG_LEVEL),
+		log.New("Server", appConfig.Server.LogLevel),
 	).Run()
 }
