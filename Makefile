@@ -79,7 +79,7 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba"]}' \
+		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 

@@ -118,7 +118,7 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 }
 
 func fullyQualifyLinks(doc *goquery.Document) *goquery.Document {
-	doc.Find("#DataTable tbody tr td.item a").Each(func(i int, s *goquery.Selection) {
+	doc.Find("#DataTable tbody tr td a").Each(func(i int, s *goquery.Selection) {
 		if partial, exists := s.Attr("href"); exists {
 			s.SetAttr("href", AuctionSite+partial)
 		}
