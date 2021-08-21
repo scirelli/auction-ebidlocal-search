@@ -21,6 +21,7 @@
     </head>
 
     <body bgcolor="#FFFFFF">
+        <h5 class="timestamp" data-timestamp-epox="{{.TimestampEpoc}}">Run on: <span>{{.Timestamp | htmlSafe}}</span></h5>
         <a href="{{.WatchlistLink}}">{{.WatchlistName | htmlSafe}}</a>
         <table id="DataTable" class="listbody" border="0" width="100%" align="center" cellpadding="3" cellspacing="1">
             <thead>

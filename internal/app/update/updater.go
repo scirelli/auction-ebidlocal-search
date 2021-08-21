@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 
@@ -127,10 +128,14 @@ func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
 		Rows          chan string
 		WatchlistLink string
 		WatchlistName string
+		Timestamp     string
+		TimestampEpoc string
 	}{
 		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
 		WatchlistLink: "__watchlistLink__", //u.config.ServerUrl + "/watchlist/" + id,
 		WatchlistName: "<!--{{watchlistName}}-->",
+		Timestamp:     time.Now().Format(time.UnixDate),
+		TimestampEpoc: fmt.Sprintf("%s", time.Now().Unix()),
 	}); err != nil {
 		return err
 	}
