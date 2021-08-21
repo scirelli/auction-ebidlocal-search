@@ -24,10 +24,11 @@ func NewUser(username string) User {
 
 //User user data.
 type User struct {
-	Name     string `json:"name"`
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Verified bool   `json:"verified"`
+	Name string `json:"name"`
+	ID   string `json:"id"`
+
+	Email    string `json:"-"`
+	Verified bool   `json:"-"`
 
 	UserDir string `json:"-"`
 

@@ -64,7 +64,18 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	router.Path("/{userID}/watchlist").Methods("POST", "UPDATE").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserWatchlistHandlerFunc), "application/json")).Name("createAndEditWatchlist")
 	router.Path("/{userID}/watchlist").Methods("DELETE").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.deleteUserWatchlistHandlerFunc), "application/json")).Name("deleteWatchlist")
 
-	router.Path("/{userID}/data.json").Methods("GET").Handler(http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir)))).Name("userData")
+	router.Path("/{userID}/data.json").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := mux.Vars(r)["userID"]
+		user, err := s.store.LoadUser(r.Context(), userID)
+		if err != nil {
+			s.logger.Error(err)
+			respondError(w, http.StatusBadRequest, "User id is required")
+			return
+		}
+
+		respondJSON(w, http.StatusCreated, user)
+		//http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir))).ServeHTTP(w, r)
+	})).Name("userData")
 	router.PathPrefix("/{userID}/watchlist/{listID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		userID := params["userID"]
