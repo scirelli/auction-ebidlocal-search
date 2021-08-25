@@ -35,7 +35,6 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 			return template.HTML(html)
 		},
 	}).ParseFiles(config.TemplateFile)
-
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -38,6 +38,7 @@ func (en *EmailNotify) Send() error {
 
 func (en *EmailNotify) Notify(message NotificationMessage) error {
 	en.Logger.Infof("Message received trying to email... %s", message)
+
 	var body, wllink string
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {

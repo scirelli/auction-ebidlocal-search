@@ -12,6 +12,18 @@ import (
 
 const FROM_EMAIL = "b6e051d671451ce4c4db+ebidlocal@gmail.com"
 
+type Mailer interface {
+	Mail(addr string, a smtp.Auth, from string, to []string, msg []byte) error
+}
+
+type MailerFunc func(addr string, a smtp.Auth, from string, to []string, msg []byte) error
+
+func (m MailerFunc) Mail(addr string, a smtp.Auth, from string, to []string, msg []byte) error {
+	return m(addr, a, from, to, msg)
+}
+
+var SendMail MailerFunc = MailerFunc(smtp.SendMail)
+
 type Email struct {
 	subject  string
 	body     string
@@ -56,7 +68,7 @@ func (e *Email) Send() error {
 		return errors.New("To email address is required.")
 	}
 
-	err := smtp.SendMail(e.smtpHost+":"+e.smtpPort, auth, e.from, e.to, e.buildEmail().Bytes())
+	err := SendMail.Mail(e.smtpHost+":"+e.smtpPort, auth, e.from, e.to, e.buildEmail().Bytes())
 	if err != nil {
 		log.Println(err)
 		return err

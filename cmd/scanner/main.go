@@ -60,12 +60,13 @@ func main() {
 
 	//Any changes found are passed onto a notifier
 	watchlistChangeEvent, _ := updater.SubscribeForChange()
-	dq := notify.NewDedupeQueue()
 	email := notify.EmailNotify{
 		ServerUrl:    appConfig.Notifier.ServerUrl,
 		Logger:       logger,
 		WatchlistDir: appConfig.Notifier.WatchlistDir,
-		MessageChan:  dq.Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(watchlistChangeEvent)),
+		MessageChan: notify.NewFilter(func(msg notify.NotificationMessage) bool {
+			return msg.User.Verified
+		}).Filter(ctx, notify.NewDedupeQueue().Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(watchlistChangeEvent))),
 	}
 
 	go scan.Scan(ctx)

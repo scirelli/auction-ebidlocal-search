@@ -1,21 +1,30 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
+	"github.com/google/uuid"
+
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
 	. "github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/notify/email"
 )
 
 func New(config Config, store store.Storer, logger log.Logger) *Server {
@@ -25,18 +34,31 @@ func New(config Config, store store.Storer, logger log.Logger) *Server {
 		store:  store,
 	}
 
-	server.addr = fmt.Sprintf("%s:%d", config.Address, config.Port)
+	t, err := template.New("verification.template.html.tmpl").Funcs(template.FuncMap{
+		"htmlSafe": func(html string) template.HTML {
+			return template.HTML(html)
+		},
+		"QueryEscape": func(queryString string) string {
+			return url.QueryEscape(queryString)
+		},
+	}).ParseFiles(config.VerificationTemplateFile)
+	if err != nil {
+		logger.Fatal(err)
+	}
 
+	server.template = t
+	server.addr = fmt.Sprintf("%s:%d", config.Address, config.Port)
 	server.registerHTTPHandlers()
 
 	return &server
 }
 
 type Server struct {
-	logger log.Logger
-	addr   string
-	store  store.Storer
-	config Config
+	logger   log.Logger
+	addr     string
+	store    store.Storer
+	config   Config
+	template *template.Template
 }
 
 func (s *Server) Run() {
@@ -73,9 +95,20 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 			return
 		}
 
-		respondJSON(w, http.StatusCreated, user)
-		//http.StripPrefix("/user", http.FileServer(http.Dir(s.config.UserDir))).ServeHTTP(w, r)
+		//Never send sensitive data back to the clients. Do not send email, verification, or admin information.
+		respondJSON(w, http.StatusCreated, struct {
+			Name       string            `json:"name"`
+			ID         string            `json:"id"`
+			Verified   bool              `json:"verified"`
+			Watchlists map[string]string `json:"watchlists"`
+		}{
+			Name:       user.Name,
+			ID:         user.ID,
+			Verified:   user.Verified,
+			Watchlists: user.Watchlists,
+		})
 	})).Name("userData")
+
 	router.PathPrefix("/{userID}/watchlist/{listID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		userID := params["userID"]
@@ -87,6 +120,10 @@ func (s *Server) registerUserRoutes(router *mux.Router) *mux.Router {
 	})).Name("getUserWatchlist")
 
 	router.Methods("POST").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.createUserHandlerFunc), "application/json")).Name("createUser")
+
+	router.Path("/{userID}/verify/send").Methods("PUT").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.sendUserVerificationHandlerFunc), "application/json", "text/plain")).Name("sendUserVerification")
+	router.Path("/{userID}/verify/{nonce}").Methods("UPDATE", "GET").Handler(handlers.ContentTypeHandler(http.HandlerFunc(s.verifyUserHandlerFunc), "application/json", "text/plain")).Name("verifyUser")
+	router.Path("/{userID}/verify").Methods("GET").Handler(http.HandlerFunc(s.isVerifiedUserHandlerFunc)).Name("isVerifiedUser")
 
 	router.PathPrefix("/{userID}/").Methods("GET").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := mux.Vars(r)["userID"]
@@ -107,6 +144,7 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var user User
 	var err error
+	var nonce uuid.UUID
 
 	decoder := json.NewDecoder(r.Body)
 	if err = decoder.Decode(&user); err != nil {
@@ -121,6 +159,12 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	tmp := NewUser(user.Name)
 	tmp.Email = user.Email
 	user = tmp
+
+	if nonce, err = s.sendUserVerification(&user); err != nil {
+		s.logger.Errorf("Fialed to send email verification for user (%s); '%s'", user.ID, err)
+	}
+	user.VerifyToken = nonce
+
 	if _, err = s.store.SaveUser(r.Context(), &user); err != nil {
 		defer s.store.DeleteUser(r.Context(), user.ID)
 		respondError(w, http.StatusInternalServerError, "User not created")
@@ -133,7 +177,6 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.logger.Infof("User created '%s'\n", user.ID)
-
 	w.Header().Set("Location", fmt.Sprintf("/user/%s/", url.PathEscape(user.ID)))
 	respondJSON(w, http.StatusCreated, user)
 }
@@ -196,6 +239,194 @@ func (s *Server) deleteUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 
 	s.logger.Infof("Delete watch list called '%s'", wl.Name)
 	respondJSON(w, http.StatusNoContent, "Deleted")
+}
+
+func (s *Server) sendUserVerificationHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	var nonce uuid.UUID
+	var userID string
+	var err error
+	var user *model.User
+
+	userID = mux.Vars(r)["userID"]
+	user, err = s.store.LoadUser(r.Context(), userID)
+	if err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusNotFound, "User Not Found")
+		return
+	}
+
+	if nonce, err = s.sendUserVerification(user); err != nil {
+		s.logger.Error(err)
+		switch interface{}(err).(type) {
+		case VerifyTooEarlyError:
+			respondError(w, http.StatusTooEarly, "Verification Already Sent")
+		default:
+			respondError(w, http.StatusInternalServerError, "Send Verification Failed")
+		}
+		return
+	}
+
+	user.VerifyToken = nonce
+	user.LastVerified = time.Now()
+	if _, err := s.store.SaveUser(r.Context(), user); err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusInternalServerError, "User Save Failed")
+		return
+	}
+
+	respondJSON(w, http.StatusAccepted, struct {
+		Send bool `json:"send"`
+	}{
+		Send: true,
+	})
+}
+
+func (s *Server) verifyUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	var userID string
+	var nonce uuid.UUID
+	var err error
+	var user *model.User
+
+	userID = mux.Vars(r)["userID"]
+	user, err = s.store.LoadUser(r.Context(), userID)
+	if err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusNotFound, "User Not Found")
+		return
+	}
+
+	if nonce, err = uuid.Parse(mux.Vars(r)["nonce"]); err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusBadRequest, "Invalid Nonce")
+		return
+	}
+
+	if err := s.verifyUser(user, nonce); err != nil {
+		s.logger.Error(err)
+		switch interface{}(err).(type) {
+		case VerifyTokenExpiredError:
+			respondError(w, http.StatusPreconditionFailed, "Token Expired")
+		case VerifyBadTokenError:
+			respondError(w, http.StatusUnprocessableEntity, "Bad Token")
+		default:
+			respondError(w, http.StatusInternalServerError, "Send Verification Failed")
+		}
+		return
+	}
+
+	user.Verified = true
+	if _, err := s.store.SaveUser(r.Context(), user); err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusInternalServerError, "User Save Failed")
+		return
+	}
+
+	urlParams := r.URL.Query()
+	redirect := urlParams["redirect"][0]
+	status := http.StatusOK
+	if redirect != "" {
+		redirect, err = url.QueryUnescape(redirect)
+		w.Header().Set("Location", redirect)
+		status = http.StatusSeeOther
+	}
+
+	respondJSON(w, status, struct {
+		Verified bool `json:"verified"`
+	}{
+		Verified: true,
+	})
+}
+
+func (s *Server) isVerifiedUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["userID"]
+	user, err := s.store.LoadUser(r.Context(), userID)
+	if err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusNotFound, "User Not Found")
+		return
+	}
+
+	if err := s.isVerifiedUser(user); err != nil {
+		s.logger.Error(err)
+		respondError(w, http.StatusUnauthorized, "Not Verified")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, struct {
+		Verified bool `json:"verified"`
+	}{
+		Verified: true,
+	})
+}
+
+//sendUserVerification sends a verification email to the user. First it checks the last verified timestamp to prevent spamming of verification emails. If interval has elapsed it will send a
+// new varify url to the user.
+func (s *Server) sendUserVerification(u *User) (uuid.UUID, error) {
+	var emailBody bytes.Buffer
+	nonce := uuid.New()
+
+	if err := s.createVerificationEmail(u, nonce, &emailBody); err != nil {
+		return uuid.UUID{}, err
+	}
+	if err := email.NewEmail(
+		[]string{u.Email},
+		fmt.Sprintf("Ebidlocal Watch List Email Verification  for'%s'", u.Name),
+		string(emailBody.String()),
+	).Send(); err != nil {
+		return uuid.UUID{}, err
+	}
+
+	return nonce, nil
+}
+
+func (s *Server) createVerificationEmail(u *User, nonce uuid.UUID, out io.Writer) error {
+	var base, pathUrl *url.URL
+	var err error
+
+	base, err = url.Parse(s.config.ServerUrl)
+	if err != nil {
+		return err
+	}
+	pathUrl, err = url.Parse(path.Join("user", u.ID, "verify", nonce.String()))
+	if err != nil {
+		return err
+	}
+
+	if err := s.template.Execute(out, struct {
+		VerificationLink string
+		WatchlistLink    string
+	}{
+		VerificationLink: base.ResolveReference(pathUrl).String(),
+		WatchlistLink:    fmt.Sprintf("%s/viewwatchlists.html?id=%s", s.config.UiUrl, url.QueryEscape(u.ID)),
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//verifyUser verifies the user, if user is verified a nil error is returned, otherwise an error is returned.
+func (s *Server) verifyUser(user *User, nonce uuid.UUID) error {
+	if user.Verified {
+		return nil
+	}
+
+	if !time.Now().Before(user.LastVerified.Add(s.config.VerificationWindowMinutes * time.Minute)) {
+		return &VerifyTokenExpiredError{}
+	}
+
+	if user.VerifyToken != nonce {
+		return &VerifyBadTokenError{}
+	}
+
+	return nil
+}
+
+func (s *Server) isVerifiedUser(user *User) error {
+	if !user.Verified {
+		return &VerifyNotVerifiedError{}
+	}
+	return nil
 }
 
 func (s *Server) createUserSpace(u *User) (string, error) {
