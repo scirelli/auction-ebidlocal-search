@@ -53,7 +53,6 @@ func Defaults(config *Config) *Config {
 		config.BatchSize = 1
 		logger.Infof("Defaulting batch size '%d\n", config.BatchSize)
 	}
-
 	if config.ServerUrl == "" {
 		config.ServerUrl = "http://localhost:8282"
 		logger.Infof("Defaulting ServerUrl to '%s'\n", config.ServerUrl)

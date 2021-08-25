@@ -4,7 +4,11 @@
   "server": {
     "port": 8282,
     "address": "0.0.0.0",
-    "contentPath": "/tmp"
+    "contentPath": "/tmp",
+    "verificationTemplateFile": "",
+    "VerificationWindowMinutes": 60,
+    "serverUrl": "http://ebidlocal.cirelli.local:8282",
+    "uiUrl": "http://ebidlocal.cirelli.local"
   },
   "scanner": {
     "contentPath": "/tmp",

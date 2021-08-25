@@ -29,7 +29,7 @@ type UserStore struct {
 func (s *UserStore) SaveUser(ctx context.Context, u *User) (string, error) {
 	var userDir string = filepath.Join(s.baseUserDir, u.ID)
 
-	s.logger.Infof("Creating user '%s' at '%s'\n", u.ID, userDir)
+	s.logger.Infof("Saving user '%s' at '%s'\n", u.ID, userDir)
 	if err := os.MkdirAll(userDir, 0775); err != nil {
 		s.logger.Error(err)
 		return "", err
@@ -47,7 +47,7 @@ func (s *UserStore) LoadUser(ctx context.Context, userID string) (*User, error) 
 	var userDataFile string = filepath.Join(s.baseUserDir, userID, s.dataFileName)
 
 	if _, err := os.Stat(userDataFile); os.IsNotExist(err) {
-		s.logger.Error("User does not exist")
+		s.logger.Errorf("User does not exist '%s'", userDataFile)
 		return nil, err
 	}
 

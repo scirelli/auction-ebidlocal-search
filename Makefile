@@ -57,7 +57,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example-retro", "list":["nintendo", "sega", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "commodore", "turboexpress", "turbo", "amiga"]}' \
+		--data '{"name":"example-retro", "list":["nintendo", "sega", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "commodore", "turboexpress", "turbo", "amiga", "tandy"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -79,7 +79,7 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed"]}' \
+		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -104,13 +104,32 @@ clean: cleanTmpUserId  ## Remove generated build files
 # help: ## Show help message
 # 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: scannerServiceLog
+.PHONY: scannerServiceLog ## Follow the scanner service logs
 scannerServiceLog:
 	sudo journalctl -f -u watchlist-scanner.service
 
 .PHONY: serverServiceLog
-serverServiceLog:
+serverServiceLog: ## Follow the server service logs
 	sudo journalctl -f -u watchlist-http.service
+
+.PHONY: verifyUser
+verifyUser: /tmp/user.id /tmp/user.nonce
+	EBID_USER="$$(cat /tmp/user.id)" ; \
+	NONCE="$$(cat /tmp/user.nonce)" ; \
+	curl --request GET \
+		--header "Content-type: application/json" \
+		http://localhost:8282/user/$$EBID_USER/verify/$$NONCE
+
+/tmp/user.nonce: /tmp/user.id
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
+	cat /tmp/web/user/$$EBID_USER/data.json | jq -r .verifyToken > /tmp/user.nonce \
+
+.PHONY: sendVerification
+sendVerification: /tmp/user.id ## Send verification email.
+	EBID_USER="$$(cat /tmp/user.id)" ; \
+	curl --request PUT \
+		--header "Content-type: application/json" \
+		http://localhost:8282/user/$$EBID_USER/verify/send
 
 .PHONY: help
 help: ## Show help message

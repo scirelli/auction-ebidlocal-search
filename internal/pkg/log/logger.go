@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -83,58 +84,62 @@ func New(tag string, logLevel LogLevel) *Standard {
 
 func (s *Standard) Debug(v ...interface{}) {
 	if s.LogLevel <= Debug {
-		s.debug.Println(v...)
+		s.debug.Output(2, fmt.Sprint(v...))
 	}
 }
 func (s *Standard) Debugf(format string, v ...interface{}) {
 	if s.LogLevel <= Debug {
-		s.debug.Printf(format, v...)
+		s.debug.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
 func (s *Standard) Info(v ...interface{}) {
 	if s.LogLevel <= Info {
-		s.info.Println(v...)
+		s.info.Output(2, fmt.Sprint(v...))
 	}
 }
 func (s *Standard) Infof(format string, v ...interface{}) {
 	if s.LogLevel <= Info {
-		s.info.Printf(format, v...)
+		s.info.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
 func (s *Standard) Warn(v ...interface{}) {
 	if s.LogLevel <= Warn {
-		s.warn.Println(v...)
+		s.warn.Output(2, fmt.Sprint(v...))
 	}
 }
 func (s *Standard) Warnf(format string, v ...interface{}) {
 	if s.LogLevel <= Warn {
-		s.warn.Printf(format, v...)
+		s.warn.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
 func (s *Standard) Error(v ...interface{}) {
 	if s.LogLevel <= Error {
-		s.error.Println(v...)
+		s.error.Output(2, fmt.Sprint(v...))
 	}
 }
 func (s *Standard) Errorf(format string, v ...interface{}) {
 	if s.LogLevel <= Error {
-		s.error.Printf(format, v...)
+		s.error.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
 func (s *Standard) Fatal(v ...interface{}) {
-	s.fatal.Fatalln(v...)
+	s.fatal.Output(2, fmt.Sprint(v...))
+	os.Exit(1)
 }
 func (s *Standard) Fatalf(format string, v ...interface{}) {
-	s.fatal.Fatalf(format, v...)
+	s.fatal.Output(2, fmt.Sprintf(format, v...))
+	os.Exit(1)
 }
 
 func (s *Standard) Panic(v ...interface{}) {
-	s.panic.Panicln(v...)
+	s.panic.Output(2, fmt.Sprint(v...))
+	panic(fmt.Sprint(v...))
 }
 func (s *Standard) Panicf(format string, v ...interface{}) {
-	s.panic.Panicf(format, v...)
+	s.panic.Output(2, fmt.Sprintf(format, v...))
+	panic(fmt.Sprintf(format, v...))
 }

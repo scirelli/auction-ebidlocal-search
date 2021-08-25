@@ -3,8 +3,10 @@ package server
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -49,6 +51,28 @@ func Defaults(config *Config) *Config {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
 		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
+	if config.VerificationTemplateFile == "" {
+		config.VerificationTemplateFile = filepath.Join(config.ContentPath, "assets", "templates", "verification.template.html.tmpl")
+		logger.Infof("Defaulting verification template dir to '%s'\n", config.VerificationTemplateFile)
+	}
+	if config.VerificationWindowMinutes == 0 {
+		config.VerificationWindowMinutes = 1
+		logger.Infof("Defaulting verification window to '%d' minute(s)\n", config.VerificationWindowMinutes)
+	}
+	if config.ServerUrl == "" {
+		config.ServerUrl = "http://localhost:8282"
+		logger.Infof("Defaulting ServerUrl to '%s'\n", config.ServerUrl)
+	} else {
+		base, err := url.Parse(config.ServerUrl)
+		if err != nil {
+			logger.Panic(err)
+		}
+		config.ServerUrl = base.String()
+	}
+	if config.UiUrl == "" {
+		config.UiUrl = "http://localhost"
+		logger.Infof("Defaulting UiUrl to '%s'\n", config.UiUrl)
+	}
 
 	return config
 }
@@ -61,6 +85,11 @@ type Config struct {
 	UserDir      string `json:"userDir"`
 	DataFileName string `json:"dataFileName"`
 	WatchlistDir string `json:"watchlistDir"`
+
+	VerificationTemplateFile  string        `json:"verificationTemplateFile"`
+	VerificationWindowMinutes time.Duration `json:"verificationWindowMinutes"`
+	ServerUrl                 string        `json:"serverUrl"`
+	UiUrl                     string        `json:"uiUrl"`
 
 	Debug    bool         `json:"debug"`
 	LogLevel log.LogLevel `json:"logLevel"`

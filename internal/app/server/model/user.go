@@ -4,6 +4,7 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -27,10 +28,12 @@ type User struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
 
-	Email    string `json:"-"`
-	Verified bool   `json:"-"`
-
-	UserDir string `json:"-"`
+	Email        string    `json:"email"`
+	Verified     bool      `json:"verified"`
+	LastVerified time.Time `json:"lastVerified"`
+	VerifyToken  uuid.UUID `json:"verifyToken"`
+	UserDir      string    `json:"-"`
+	IsAdmin      bool      `json:"isAdmin"`
 
 	//Wathclist names to ids
 	Watchlists map[string]string `json:"watchlists"`
