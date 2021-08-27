@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Please fill in some brief details below about the PR.
 Please remove unused sections.
  -->
@@ -19,7 +19,7 @@ Please remove unused sections.
 > Include any extra notes here
 
 ### Pre Pull Request Checklist:
-- [ ] Ran `pylint`.
+- [ ] Ran `fmt`.
 - [ ] Ran with out errors.
 - [ ] Unit tests.
 - [ ] Unit tests have `issue number`
