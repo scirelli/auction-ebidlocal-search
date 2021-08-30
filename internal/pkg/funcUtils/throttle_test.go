@@ -38,7 +38,7 @@ func TestGlobalThrottleFunc(t *testing.T) {
 				callMe(v[0].(int))
 			}, i)
 		}
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 		assert.Equal(t, 120, sum)
 	})
 

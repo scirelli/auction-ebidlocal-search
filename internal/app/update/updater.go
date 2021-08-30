@@ -43,7 +43,7 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 		config:          config,
 		logger:          logger,
 		template:        t,
-		auctionSearcher: search.AuctionSearchFunc(search.SearchAuctions),
+		auctionSearcher: search.AuctionSearchFactory("v1", nil),
 		ctx:             ctx,
 		store:           watchlistStore,
 		changePublsr:    publish.NewStringChange(),
@@ -134,7 +134,7 @@ func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
 		WatchlistLink: "__watchlistLink__", //u.config.ServerUrl + "/watchlist/" + id,
 		WatchlistName: "<!--{{watchlistName}}-->",
 		Timestamp:     time.Now().Format(time.UnixDate),
-		TimestampEpoc: fmt.Sprintf("%s", time.Now().Unix()),
+		TimestampEpoc: fmt.Sprintf("%d", time.Now().Unix()),
 	}); err != nil {
 		return err
 	}
