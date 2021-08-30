@@ -31,16 +31,9 @@ var logger log.Logger
 
 func init() {
 	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
-}
-
-type AuctionSearcher interface {
-	Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
-}
-
-type AuctionSearchFunc func(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string)
-
-func (as AuctionSearchFunc) Search(keywords stringiter.Iterable, auctions stringiter.Iterable) (results chan string) {
-	return as(keywords, auctions)
+	AuctionSearchRegistrar("v1", func(config interface{}) AuctionSearcher {
+		return AuctionSearchFunc(SearchAuctions)
+	})
 }
 
 func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan string) {

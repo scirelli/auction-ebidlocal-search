@@ -192,23 +192,23 @@ func TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 	expected := `
 				<tr class="DataRow" id="270" valign="top">
 					<td class="item"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples556/270">270</a><br/><div class="morepics"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples556/270">more<br/>pics</a></div></td>
-					<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples556/270"><img border="0" src="https://ebid15.com/photos/202104-D1 Warehouse-1356/smalls/270.JPG" alt="smalls/270.JPG"/></a></td><td class="description"><b>Category</b>: DECORATIVE<br/><b>Item</b>: PROP TV MADE IN BRAZIL, METAL 48X28&#34;.  MISSING ONE BUTTON.<br/><b>Location</b>: FRONT RIGHT<br/></td>
-					<td align="right" class="bids"><a href="/cgi-bin/mmhistory.cgi?staples556/270"><span id="270_bids">2</span></a></td>
+					<td align="center" class="photo"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples556/270"><img border="0" src="https://ebid15.com/photos/202104-D1 Warehouse-1356/smalls/270.JPG" alt="smalls/270.JPG"/></a></td><td class="description"><b>Category</b>: DECORATIVE<br/><b>Item</b>: PROP TV MADE IN BRAZIL, METAL 48X28&#34;.  MISSING ONE BUTTON.<br/><b>Location</b>: FRONT RIGHT<br/></td>
+					<td align="right" class="bids"><a href="https://auction.ebidlocal.com/cgi-bin/mmhistory.cgi?staples556/270"><span id="270_bids">2</span></a></td>
 					<td align="right" class="highbidder"><span id="270_highbidder">21493</span></td>
 					<td align="right" class="currentamount"><span id="270_currentprice">1.49</span></td>
-					<td align="right" class="nextbidrequired"><span id="270_nextrequired"><a href="javascript:subfillform(&#39;270&#39;,&#39;1.99&#39;)">1.99</a></span></td>
+					<td align="right" class="nextbidrequired"><span id="270_nextrequired"><a href="https://auction.ebidlocal.comjavascript:subfillform(&#39;270&#39;,&#39;1.99&#39;)">1.99</a></span></td>
 					<td align="center" class="yourbid"><span id="270_yourbid"><input type="text" name="270" size="8" placeholder="your bid"/></span></td>
-					<td align="center" class="yourmaximum"><span id="270_yourmax"><input type="text" name="m270" size="8" placeholder="your max"/> <br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="270_endtime"></span><br/><span id="270_status"></span></td>
+					<td align="center" class="yourmaximum"><span id="270_yourmax"><input type="text" name="m270" size="8" placeholder="your max"/> <br/><i><a href="https://auction.ebidlocal.comjavascript:subbnpw()">submit bid</a></i></span><br/><span id="270_endtime"></span><br/><span id="270_status"></span></td>
 				</tr>
 				<tr class="DataRow" id="1435" valign="top">
 					<td class="item"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples571/1435">1435</a><br/><div class="morepics"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples571/1435">more<br/>pics</a></div></td>
-					<td align="center" class="photo"><a href="/cgi-bin/mmlist.cgi?staples571/1435"><img border="0" src="https://ebid15.com/photos/202104-HM-Kelleher-1371/smalls/1435.JPG" alt="smalls/1435.JPG"/></a></td><td class="description"><b>Category</b>: HOUSEHOLD<br/><b>Item</b>: SHOEHORNS, DRESSER VALET, ELECTRIC SHAVERS, TIMEX ALARM CLOCK, SHOESHINE BRUSHES, SONY TV WEATHER/AM/FM PERSONAL RADIO<br/><b>Location</b>: DINING ROOM<br/></td>
+					<td align="center" class="photo"><a href="https://auction.ebidlocal.com/cgi-bin/mmlist.cgi?staples571/1435"><img border="0" src="https://ebid15.com/photos/202104-HM-Kelleher-1371/smalls/1435.JPG" alt="smalls/1435.JPG"/></a></td><td class="description"><b>Category</b>: HOUSEHOLD<br/><b>Item</b>: SHOEHORNS, DRESSER VALET, ELECTRIC SHAVERS, TIMEX ALARM CLOCK, SHOESHINE BRUSHES, SONY TV WEATHER/AM/FM PERSONAL RADIO<br/><b>Location</b>: DINING ROOM<br/></td>
 					<td align="right" class="bids"><span id="1435_bids"></span></td>
 					<td align="right" class="highbidder"><span id="1435_highbidder"></span></td>
 					<td align="right" class="currentamount"><span id="1435_currentprice"></span></td>
-					<td align="right" class="nextbidrequired"><span id="1435_nextrequired"><a href="javascript:subfillform(&#39;1435&#39;,&#39;0.99&#39;)">0.99</a></span></td>
+					<td align="right" class="nextbidrequired"><span id="1435_nextrequired"><a href="https://auction.ebidlocal.comjavascript:subfillform(&#39;1435&#39;,&#39;0.99&#39;)">0.99</a></span></td>
 					<td align="center" class="yourbid"><span id="1435_yourbid"><input type="text" name="1435" size="8" placeholder="your bid"/></span></td>
-					<td align="center" class="yourmaximum"><span id="1435_yourmax"><input type="text" name="m1435" size="8" placeholder="your max"/> <br/><i><a href="javascript:subbnpw()">submit bid</a></i></span><br/><span id="1435_endtime"></span><br/><span id="1435_status"></span></td>
+					<td align="center" class="yourmaximum"><span id="1435_yourmax"><input type="text" name="m1435" size="8" placeholder="your max"/> <br/><i><a href="https://auction.ebidlocal.comjavascript:subbnpw()">submit bid</a></i></span><br/><span id="1435_endtime"></span><br/><span id="1435_status"></span></td>
 				</tr>
 			`
 	ebid.Client = &mockClient{
