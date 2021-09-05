@@ -30,7 +30,7 @@ func AuctionSearchRegistrar(name string, f SearcherFactoryFunc) {
 	searchers[name] = f
 }
 
-func NullSearch(keywords stringiter.Iterable, auctions stringiter.Iterable) chan string {
+func NullSearch(keywords stringiter.Iterable) chan string {
 	c := make(chan string)
 	close(c)
 	return c

@@ -12,6 +12,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	auctions "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
@@ -32,7 +33,9 @@ var logger log.Logger
 func init() {
 	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
 	AuctionSearchRegistrar("v1", func(config interface{}) AuctionSearcher {
-		return AuctionSearchFunc(SearchAuctions)
+		return AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan string {
+			return SearchAuctions(keywordIter, auctions.NewAuctionsCache())
+		})
 	})
 }
 

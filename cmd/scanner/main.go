@@ -9,7 +9,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/notify"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
-	ebidLib "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
+	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
 	storefs "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -54,8 +54,8 @@ func main() {
 				DataFileName: appConfig.Updater.DataFileName,
 			}, log.New("Updater.FSStore", appConfig.Scanner.LogLevel)),
 		},
+		search.AuctionSearchFactory("v1", nil),
 		appConfig.Updater)
-	updater.SetOpenAuctions(ebidLib.NewAuctionsCache())
 	pathsChan, _ := scan.SubscribeForPath()
 
 	//Any changes found are passed onto a notifier
