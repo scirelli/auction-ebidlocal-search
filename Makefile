@@ -88,7 +88,7 @@ test: ## Run all tests
 	@go test ./...
 
 .PHONY: vtest
-vtest: ## Run all tests
+vtest: ## Run all tests with verbose flag set
 	@go test -v -count=1 ./...
 
 .PHONY: cleanTmpUserId

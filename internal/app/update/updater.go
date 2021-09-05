@@ -27,10 +27,10 @@ type Updater interface {
 }
 
 //New constructor for updater app. This app creates new watch lists on disk and has a updater to keep them up-to-date.
-func New(ctx context.Context, watchlistStore store.Storer, config Config) *Update {
+func New(ctx context.Context, watchlistStore store.Storer, auctionSearcher search.AuctionSearcher, config Config) *Update {
 	var logger = log.New("Update", log.DEFAULT_LOG_LEVEL)
 
-	t, err := template.New("template.html.tmpl").Funcs(template.FuncMap{
+	t, err := template.New("watchlist_content").Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
@@ -43,7 +43,7 @@ func New(ctx context.Context, watchlistStore store.Storer, config Config) *Updat
 		config:          config,
 		logger:          logger,
 		template:        t,
-		auctionSearcher: search.AuctionSearchFactory("v1", nil),
+		auctionSearcher: auctionSearcher,
 		ctx:             ctx,
 		store:           watchlistStore,
 		changePublsr:    publish.NewStringChange(),
@@ -55,17 +55,10 @@ type Update struct {
 	config          Config
 	logger          log.Logger
 	template        *template.Template
-	openAuctions    stringiter.Iterable
 	auctionSearcher search.AuctionSearcher
 	store           store.Storer
 	ctx             context.Context
 	changePublsr    publish.StringPublisher
-}
-
-//SetOpenAuctions sets the list of open auctions to search.
-func (u *Update) SetOpenAuctions(openAuctions stringiter.Iterable) *Update {
-	u.openAuctions = openAuctions
-	return u
 }
 
 //SubscribeForChange returns a channel that can be monitored for changes, it also returns a function to call unsubscribe the channel.
@@ -130,7 +123,7 @@ func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
 		Timestamp     string
 		TimestampEpoc string
 	}{
-		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist), u.openAuctions),
+		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist)),
 		WatchlistLink: "__watchlistLink__", //u.config.ServerUrl + "/watchlist/" + id,
 		WatchlistName: "<!--{{watchlistName}}-->",
 		Timestamp:     time.Now().Format(time.UnixDate),
