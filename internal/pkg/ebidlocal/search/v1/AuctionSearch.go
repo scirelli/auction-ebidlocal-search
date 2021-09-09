@@ -1,4 +1,4 @@
-package ebidlocal
+package search
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	auctions "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/auctions"
+	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
@@ -32,9 +32,9 @@ var logger log.Logger
 
 func init() {
 	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
-	AuctionSearchRegistrar("v1", func(config interface{}) AuctionSearcher {
-		return AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan string {
-			return SearchAuctions(keywordIter, auctions.NewAuctionsCache())
+	search.AuctionSearchRegistrar("v1", func(config interface{}) search.AuctionSearcher {
+		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan string {
+			return SearchAuctions(keywordIter, NewAuctionsCache())
 		})
 	})
 }
@@ -44,14 +44,14 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 	var iter stringiter.Iterator = keywordIter.Iterator()
 	results = make(chan string)
 
-	for keyword, done := iter.Next(); done; keyword, done = iter.Next() {
+	for keyword, ok := iter.Next(); ok; keyword, ok = iter.Next() {
 		keywords = append(keywords, keyword)
 	}
 
 	iter = openAuctions.Iterator()
 	go func() {
 		var wg sync.WaitGroup
-		for auction, done := iter.Next(); done; auction, done = iter.Next() {
+		for auction, ok := iter.Next(); ok; auction, ok = iter.Next() {
 			wg.Add(1)
 			throttle(func(v ...interface{}) {
 				defer wg.Done()

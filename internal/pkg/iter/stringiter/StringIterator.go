@@ -62,3 +62,12 @@ func (ssg SliceStringIterator) Iterator() Iterator {
 		return v, true
 	})
 }
+
+type ChanStringIterator chan string
+
+func (csg ChanStringIterator) Iterator() Iterator {
+	return IteratorFunc(func() (string, bool) {
+		value, ok := <-csg
+		return value, ok
+	})
+}

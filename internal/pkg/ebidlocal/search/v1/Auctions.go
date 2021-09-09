@@ -1,3 +1,3 @@
-package ebidlocal
+package search
 
 type Auctions []string

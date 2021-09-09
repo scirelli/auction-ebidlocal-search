@@ -27,7 +27,7 @@
             "mode": "test",
             "remotePath": "",
             "program": "${relativeFileDirname}",
-            "env": {},
+            "env": {"DEBUG": 1, "LOGLEVEL": "Debug"},
             "args": [],
             "showLog": true
         }

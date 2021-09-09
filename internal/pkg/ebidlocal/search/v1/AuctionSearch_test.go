@@ -1,4 +1,4 @@
-package ebidlocal
+package search
 
 import (
 	"errors"
@@ -11,20 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
+	"github.com/scirelli/auction-ebidlocal-search/test/fixtures"
 )
-
-type mockClient struct {
-	postForm func(url string, data url.Values) (resp *http.Response, err error)
-	get      func(url string) (resp *http.Response, err error)
-}
-
-func (m *mockClient) PostForm(url string, data url.Values) (resp *http.Response, err error) {
-	return m.postForm(url, data)
-}
-
-func (m *mockClient) Get(url string) (resp *http.Response, err error) {
-	return m.get(url)
-}
 
 type TestCase struct {
 	Body       string
@@ -81,15 +69,15 @@ func TestSearchAuction(t *testing.T) {
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			ebid.Client = &mockClient{
-				postForm: func(url string, data url.Values) (resp *http.Response, err error) {
+			ebid.Client = &fixtures.MockClient{
+				PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 					return &http.Response{
 						Body:       ioutil.NopCloser(strings.NewReader(test.Body)),
 						StatusCode: test.StatusCode,
 						Request:    &http.Request{},
 					}, test.Error
 				},
-				get: func(url string) (resp *http.Response, err error) {
+				GetFunc: func(url string) (resp *http.Response, err error) {
 					return nil, nil
 				},
 			}
@@ -124,8 +112,8 @@ func Skip_TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 					<td align="center" class="yourmaximum"></td>
 				</tr>
 			`
-	ebid.Client = &mockClient{
-		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
+	ebid.Client = &fixtures.MockClient{
+		PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -175,7 +163,7 @@ func Skip_TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 				Request:    &http.Request{},
 			}, nil
 		},
-		get: func(url string) (resp *http.Response, err error) {
+		GetFunc: func(url string) (resp *http.Response, err error) {
 			return &http.Response{
 				Body:       ioutil.NopCloser(strings.NewReader("")),
 				StatusCode: 200,
@@ -211,8 +199,8 @@ func TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 					<td align="center" class="yourmaximum"><span id="1435_yourmax"><input type="text" name="m1435" size="8" placeholder="your max"/> <br/><i><a href="https://auction.ebidlocal.comjavascript:subbnpw()">submit bid</a></i></span><br/><span id="1435_endtime"></span><br/><span id="1435_status"></span></td>
 				</tr>
 			`
-	ebid.Client = &mockClient{
-		postForm: func(url string, data url.Values) (resp *http.Response, err error) {
+	ebid.Client = &fixtures.MockClient{
+		PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -262,7 +250,7 @@ func TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 				Request:    &http.Request{},
 			}, nil
 		},
-		get: func(url string) (resp *http.Response, err error) {
+		GetFunc: func(url string) (resp *http.Response, err error) {
 			return &http.Response{
 				Body:       ioutil.NopCloser(strings.NewReader("No value")),
 				StatusCode: 200,

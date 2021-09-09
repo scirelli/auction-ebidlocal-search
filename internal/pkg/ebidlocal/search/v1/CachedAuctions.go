@@ -1,4 +1,4 @@
-package ebidlocal
+package search
 
 import (
 	"log"

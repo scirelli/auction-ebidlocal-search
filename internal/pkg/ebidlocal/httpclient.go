@@ -9,6 +9,7 @@ import (
 type HTTPClient interface {
 	PostForm(url string, data url.Values) (resp *http.Response, err error)
 	Get(url string) (resp *http.Response, err error)
+	Do(req *http.Request) (*http.Response, error)
 }
 
 var Client HTTPClient
