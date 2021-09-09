@@ -1,4 +1,4 @@
-package ebidlocal
+package search
 
 import "github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 
