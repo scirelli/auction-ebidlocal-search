@@ -4,11 +4,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"testing"
 
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/test/fixtures"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ type AuctionSearchTestCase struct {
 	Error      error
 	Auctions   stringiter.Iterable
 	Keywords   stringiter.Iterable
-	Expected   []string
+	Expected   []model.SearchResult
 }
 
 func TestSearchAuction(t *testing.T) {
@@ -49,7 +49,10 @@ func TestSearchAuction(t *testing.T) {
 			Error:    nil,
 			Auctions: stringiter.SliceStringIterator([]string{"auction1"}),
 			Keywords: stringiter.SliceStringIterator([]string{"hi"}),
-			Expected: []string{`<div class="row pb-3 mt-2 border-bottom"></div>`, `<div class="row pb-3 mt-2 border-bottom"></div>`},
+			Expected: []model.SearchResult{
+				{AuctionID: "auction1", Keyword: "hi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "hi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+			},
 		},
 		"Should return all rows of the Ebidlocal search results for one auction and two keywords": AuctionSearchTestCase{
 			Responses: []*http.Response{
@@ -93,11 +96,11 @@ func TestSearchAuction(t *testing.T) {
 			Error:    nil,
 			Auctions: stringiter.SliceStringIterator([]string{"auction1"}),
 			Keywords: stringiter.SliceStringIterator([]string{"shi", "thanos"}),
-			Expected: []string{
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
+			Expected: []model.SearchResult{
+				{AuctionID: "auction1", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
 			},
 		},
 		"Should return all rows of the Ebidlocal search results for two auctions and one keyword": AuctionSearchTestCase{
@@ -142,11 +145,11 @@ func TestSearchAuction(t *testing.T) {
 			Error:    nil,
 			Auctions: stringiter.SliceStringIterator([]string{"auction1", "auction2"}),
 			Keywords: stringiter.SliceStringIterator([]string{"shi"}),
-			Expected: []string{
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
+			Expected: []model.SearchResult{
+				{AuctionID: "auction2", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction2", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
 			},
 		},
 		"Should return all rows of the Ebidlocal search results for two auctions and two keywords": AuctionSearchTestCase{
@@ -227,15 +230,15 @@ func TestSearchAuction(t *testing.T) {
 			Error:    nil,
 			Auctions: stringiter.SliceStringIterator([]string{"auction1", "auction2"}),
 			Keywords: stringiter.SliceStringIterator([]string{"shi", "thanos"}),
-			Expected: []string{
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
-				`<div class="row pb-3 mt-2 border-bottom"></div>`,
+			Expected: []model.SearchResult{
+				{AuctionID: "auction1", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction2", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction2", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction1", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction2", Keyword: "shi", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
+				{AuctionID: "auction2", Keyword: "thanos", Content: `<div class="row pb-3 mt-2 border-bottom"></div>`},
 			},
 		},
 	}
@@ -243,7 +246,7 @@ func TestSearchAuction(t *testing.T) {
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
 			var responseCount int = -1
-			ebid.Client = &fixtures.MockClient{
+			Client = &fixtures.MockClient{
 				PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 					return nil, nil
 				},
@@ -255,18 +258,25 @@ func TestSearchAuction(t *testing.T) {
 					return test.Responses[responseCount], test.Error
 				},
 			}
+			var results []model.SearchResult
+
 			resultsChan := SearchAuctions(test.Keywords, test.Auctions)
-			for _, expected := range test.Expected {
-				result := <-resultsChan
-				assert.Equalf(t, expected, result, "'%v' not equal '%v'", result, expected)
+			for item := range resultsChan {
+				results = append(results, item)
+			}
+			sort.Sort(model.AuctionIDKeywordSorter(test.Expected))
+			sort.Sort(model.AuctionIDKeywordSorter(results))
+			for i, expected := range test.Expected {
+				assert.Equalf(t, expected, results[i], "'%v' not equal '%v'", results[i], expected)
 			}
 		})
 	}
 }
 
 func Skip_TestIntegrationSearchAuction(t *testing.T) {
-	ebid.Client = http.DefaultClient
-	resultsChan := search.AuctionSearchFactory("v2", nil).Search(stringiter.SliceStringIterator([]string{"car"}))
+	Client = http.DefaultClient
+	resultsChan := SearchAuctions(stringiter.SliceStringIterator([]string{"car"}), NewAuctionsCache())
+
 	for result := range resultsChan {
 		t.Log(result)
 	}

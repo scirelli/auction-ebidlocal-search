@@ -1,14 +1,20 @@
 package notify
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/url"
-	"path"
+	"os"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/notify/email"
 )
@@ -21,10 +27,35 @@ func init() {
 }
 
 type EmailNotify struct {
-	Logger       log.Logger
-	MessageChan  <-chan NotificationMessage
-	ServerUrl    string
-	WatchlistDir string
+	Logger      log.Logger
+	MessageChan <-chan NotificationMessage
+	template    *template.Template
+	store       store.WatchlistContentStorer
+	config      Config
+}
+
+func NewEmailNotify(config Config, store store.WatchlistContentStorer, messageChan <-chan NotificationMessage) *EmailNotify {
+	var logger = log.New("EmailNotify", log.DEFAULT_LOG_LEVEL)
+
+	t, err := template.New("email.html.tmpl").Funcs(template.FuncMap{
+		"htmlSafe": func(html string) template.HTML {
+			return template.HTML(html)
+		},
+		"String": func(item fmt.Stringer) string {
+			return item.String()
+		},
+	}).ParseFiles(config.TemplateFile)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	return &EmailNotify{
+		MessageChan: messageChan,
+		Logger:      logger,
+		config:      config,
+		template:    t,
+		store:       store,
+	}
 }
 
 func (en *EmailNotify) Send() error {
@@ -39,26 +70,50 @@ func (en *EmailNotify) Send() error {
 func (en *EmailNotify) Notify(message NotificationMessage) error {
 	en.Logger.Infof("Message received trying to email... %s", message)
 
-	var body, wllink string
+	var wllink string
+	var err error
+	var content *model.WatchlistContent
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {
-			//body = fmt.Sprintf("%s/user/%s/watchlist/%s", en.ServerUrl, message.User.ID, wlID)
-			wllink = fmt.Sprintf("%s/viewwatchlists.html?id=%s#%s", en.ServerUrl, url.QueryEscape(message.User.ID), startWithNumbers.ReplaceAllString(cssValidCharacters.ReplaceAllString(wlname+"_"+wlID, ""), ""))
-			body = wllink
-			if data, err := ioutil.ReadFile(path.Join(en.WatchlistDir, wlID, "index.html")); err == nil {
-				//en.Logger.Debugf("Email TEMPLATE \n\n%s\n\n", string(data))
-				body = strings.Replace(string(data), "<!--{{watchlistName}}-->", wlname, 1)
-				body = strings.Replace(body, "__watchlistLink__", wllink, 1)
-			} else {
+			var emailBody *bytes.Buffer = &bytes.Buffer{}
+			wllink = fmt.Sprintf("%s/viewwatchlists.html?id=%s#%s", en.config.ServerUrl, url.QueryEscape(message.User.ID), startWithNumbers.ReplaceAllString(cssValidCharacters.ReplaceAllString(wlname+"_"+wlID, ""), ""))
+
+			if content, err = en.store.LoadWatchlistContent(context.Background(), wlID); err != nil {
 				en.Logger.Errorf("Error retrieving wl '%s'", err)
-				en.Logger.Debugf("wlname: '%s'; wl: '%s'; data: '%s'; body '%s'; error '%s'", wlname, wl, data, body, err)
+				en.Logger.Debugf("wlname: '%s'; wl: '%s'; wllink '%s'; error '%s'", wlname, wl, wllink, err)
+				content = &model.WatchlistContent{}
+			}
+
+			if err := en.template.Execute(emailBody, struct {
+				ServerURL     string
+				Rows          []model.AuctionItem
+				WatchlistLink string
+				WatchlistName string
+				Timestamp     string
+				TimestampEpoc string
+			}{
+				ServerURL:     en.config.ServerUrl,
+				Rows:          content.AuctionItems,
+				WatchlistLink: wllink,
+				WatchlistName: wlname,
+				Timestamp:     time.Now().Format(time.UnixDate),
+				TimestampEpoc: fmt.Sprintf("%d", time.Now().Unix()),
+			}); err != nil {
+				en.Logger.Errorf("Error retrieving wl '%s'", err)
+				return err
 			}
 
 			if wlID == message.WatchlistID {
+				eb := emailBody.String()
+				if os.Getenv("DEBUG") != "" {
+					f, _ := ioutil.TempFile("/tmp", fmt.Sprintf("doc_%s_", "EmailBody"))
+					f.WriteString(eb)
+					f.Close()
+				}
 				return email.NewEmail(
 					[]string{message.User.Email},
 					fmt.Sprintf("Your watch list has updates '%s'", wlname),
-					body,
+					eb,
 				).Send()
 			}
 		}

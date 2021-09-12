@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -81,7 +80,7 @@ func requestOpenAuctions(openAuctionsURL string) []string {
 func scrapeAuctionLabelIds(openAuctionsURL string) []string {
 	var ids []string
 
-	res, err := ebid.Client.Get(openAuctionsURL)
+	res, err := Client.Get(openAuctionsURL)
 	if err != nil {
 		clogger.Error(err)
 		return ids

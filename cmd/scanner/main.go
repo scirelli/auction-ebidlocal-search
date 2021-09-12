@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/extract"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/notify"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/scanner"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/update"
-	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	storefs "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -41,33 +42,51 @@ func main() {
 	if *contentPath != "" {
 		appConfig.Scanner.ContentPath = *contentPath
 		appConfig.Updater.ContentPath = *contentPath
+		appConfig.Notifier.ContentPath = *contentPath
 	}
 
 	//scanner produces paths
 	scan := scanner.New(appConfig.Scanner)
 
 	//Updater subscribes to the paths and checks for changes
-	updater := update.New(ctx,
+	updater := update.New(
+		ctx,
 		storefs.FSStore{
-			storefs.NewWatchlistStore(storefs.StoreConfig{
-				WatchlistDir: appConfig.Updater.WatchlistDir,
-				DataFileName: appConfig.Updater.DataFileName,
-			}, log.New("Updater.FSStore", appConfig.Scanner.LogLevel)),
+			storefs.NewWatchlistStore(
+				storefs.WatchlistStoreConfig{
+					WatchlistDir: appConfig.Updater.WatchlistDir,
+				},
+				log.New("Updater.FSStore", appConfig.Scanner.LogLevel),
+			),
+			storefs.NewWatchlistContentStore(
+				storefs.WatchlistContentStoreConfig{
+					ContentPath: appConfig.Updater.ContentPath,
+				},
+			),
 		},
-		search.AuctionSearchFactory("v1", nil),
-		appConfig.Updater)
+		update.EbidlocalExtractor{
+			extract.NewAuctionItem(&extract.Config{
+				LogLevel: log.DEFAULT_LOG_LEVEL,
+			}),
+			ebidlocal.AuctionSearchFactory("v2", nil),
+		},
+		appConfig.Updater,
+	)
 	pathsChan, _ := scan.SubscribeForPath()
 
 	//Any changes found are passed onto a notifier
 	watchlistChangeEvent, _ := updater.SubscribeForChange()
-	email := notify.EmailNotify{
-		ServerUrl:    appConfig.Notifier.ServerUrl,
-		Logger:       logger,
-		WatchlistDir: appConfig.Notifier.WatchlistDir,
-		MessageChan: notify.NewFilter(func(msg notify.NotificationMessage) bool {
+	email := notify.NewEmailNotify(
+		appConfig.Notifier,
+		storefs.NewWatchlistContentStore(
+			storefs.WatchlistContentStoreConfig{
+				ContentPath: appConfig.Notifier.ContentPath,
+			},
+		),
+		notify.NewFilter(func(msg notify.NotificationMessage) bool {
 			return msg.User.Verified
 		}).Filter(ctx, notify.NewDedupeQueue().Enqueue(notify.NewWatchlistConvertData(appConfig.Notifier).Convert(watchlistChangeEvent))),
-	}
+	)
 
 	go scan.Scan(ctx)
 	go updater.Update(pathsChan)

@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
+	wlmodel "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	ebidstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
-	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/watchlist"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
 
@@ -25,7 +25,7 @@ type EbidlocalAsWatchlistStore struct {
 }
 
 func (wl *EbidlocalAsWatchlistStore) SaveWatchlist(ctx context.Context, list *model.Watchlist) (ID string, err error) {
-	if ID, err = wl.store.SaveWatchlist(ctx, watchlist.Watchlist(list.List)); err != nil {
+	if ID, err = wl.store.SaveWatchlist(ctx, wlmodel.Watchlist(list.List)); err != nil {
 		return "", err
 	}
 	return ID, nil

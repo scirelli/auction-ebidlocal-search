@@ -11,11 +11,11 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
+	ebidhttp "github.com/scirelli/auction-ebidlocal-search/internal/pkg/net/http"
 )
 
 const (
@@ -27,27 +27,25 @@ const (
 	maxConcurrentRequests        = 5
 )
 
+var Client ebidhttp.HTTPClient
 var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
 var logger log.Logger
 
 func init() {
 	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
-	search.AuctionSearchRegistrar("v1", func(config interface{}) search.AuctionSearcher {
-		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan string {
-			return SearchAuctions(keywordIter, NewAuctionsCache())
-		})
-	})
+	Client = http.DefaultClient
 }
 
-func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan string) {
+func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan model.SearchResult) {
 	var keywords []string
 	var iter stringiter.Iterator = keywordIter.Iterator()
-	results = make(chan string)
+	results = make(chan model.SearchResult)
 
 	for keyword, ok := iter.Next(); ok; keyword, ok = iter.Next() {
 		keywords = append(keywords, keyword)
 	}
 
+	keywordsCat := strings.Join(keywords, ",")
 	iter = openAuctions.Iterator()
 	go func() {
 		var wg sync.WaitGroup
@@ -57,7 +55,11 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 				defer wg.Done()
 				var auction string = v[0].(string)
 				if html, err := SearchAuction(auction, keywords); err == nil {
-					results <- html
+					results <- model.SearchResult{
+						Content:   html,
+						AuctionID: auction,
+						Keyword:   keywordsCat,
+					}
 				}
 			}, auction)
 		}
@@ -72,7 +74,7 @@ func SearchAuction(auction string, keywords []string) (html string, err error) {
 	var res *http.Response
 
 	logger.Debugf("Searching... URL '%s'; auction '%s'; keywords '%s'", SearchURL, auction, keywords)
-	res, err = ebid.Client.PostForm(SearchURL, url.Values{
+	res, err = Client.PostForm(SearchURL, url.Values{
 		"auction": {auction},
 		"keyword": {strings.Join(keywords, " ")},
 		"stype":   {"ANY"},

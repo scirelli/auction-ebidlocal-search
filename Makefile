@@ -79,7 +79,29 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones"]}' \
+		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones", "drill", "drillpress", "press"]}' \
+		localhost:8282/user/$$EBID_USER/watchlist
+	@echo ''
+
+.PHONY: requestNewWatchlist3
+requestNewWatchlist3: /tmp/user.id ## Create a new watch list. Used for testing.
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
+	curl --request POST \
+		--include \
+		--location \
+		--header "Content-Type: application/json" \
+		--data '{"name":"example2-other", "list":["chess", "monopoly", "candyland"]}' \
+		localhost:8282/user/$$EBID_USER/watchlist
+	@echo ''
+
+.PHONY: requestNewWatchlist4
+requestNewWatchlist4: /tmp/user.id ## Create a new watch list. Used for testing.
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
+	curl --request POST \
+		--include \
+		--location \
+		--header "Content-Type: application/json" \
+		--data '{"name":"example-holiday", "list":["christmas", "xmas", "x-mas", "halloween", "fall", "decorations"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 

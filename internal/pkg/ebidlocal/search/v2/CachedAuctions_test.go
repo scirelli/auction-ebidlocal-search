@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/test/fixtures"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,7 +69,7 @@ func TestAuctionCache(t *testing.T) {
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			ebid.Client = &fixtures.MockClient{
+			Client = &fixtures.MockClient{
 				PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 					return nil, nil
 				},

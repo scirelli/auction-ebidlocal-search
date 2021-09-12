@@ -1,4 +1,4 @@
-package search
+package search //TODO: Rename package to v2
 
 import (
 	"context"
@@ -13,11 +13,11 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
-	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/funcUtils"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
+	ebidhttp "github.com/scirelli/auction-ebidlocal-search/internal/pkg/net/http"
 )
 
 const (
@@ -28,20 +28,17 @@ const (
 	maxConcurrentRequests        = 5
 )
 
+var Client ebidhttp.HTTPClient
 var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
 var logger log.Logger
 
 func init() {
 	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
-	search.AuctionSearchRegistrar("v2", func(config interface{}) search.AuctionSearcher {
-		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan string {
-			return SearchAuctions(keywordIter, NewAuctionsCache())
-		})
-	})
+	Client = http.DefaultClient
 }
 
-func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan string) {
-	results = make(chan string)
+func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Iterable) (results chan model.SearchResult) {
+	results = make(chan model.SearchResult)
 
 	go func() {
 		var auctionIter stringiter.Iterator = openAuctions.Iterator()
@@ -62,13 +59,14 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 			}
 		}
 		wg.Wait()
+		logger.Debug("Completed Auction Searching")
 		close(results)
 	}()
 
 	return results
 }
 
-func SearchAuction(out chan<- string, auction string, keyword string) (err error) {
+func SearchAuction(out chan<- model.SearchResult, auction string, keyword string) (err error) {
 	var res *http.Response
 	var req *http.Request
 
@@ -82,8 +80,8 @@ func SearchAuction(out chan<- string, auction string, keyword string) (err error
 	params.Add("viewType", "3")
 	params.Add("pageSize", "10000")
 	base.RawQuery = params.Encode()
-	logger.Debugf("Searching... URL '%s'; auction '%s'; keyword '%s'", base.String(), auction, keyword)
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	logger.Debugf("Making request to... URL '%s'; auction '%s'; keyword '%s'", base.String(), auction, keyword)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if req, err = http.NewRequestWithContext(ctx, "GET", base.String(), nil); err != nil {
 		return err
@@ -91,12 +89,12 @@ func SearchAuction(out chan<- string, auction string, keyword string) (err error
 	req.Header.Add("Host", "staples.prod4.maxanet.auction")
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
 	req.Header.Add("Pragma", "no-cache")
-	if res, err = ebid.Client.Do(req); err != nil {
+	if res, err = Client.Do(req); err != nil {
 		return err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("status code error: %d %s", res.StatusCode, res.Status))
+		return errors.New(fmt.Sprintf("Status code error: %d %s", res.StatusCode, res.Status))
 	}
 
 	doc, err := goquery.NewDocumentFromResponse(res)
@@ -116,7 +114,11 @@ func SearchAuction(out chan<- string, auction string, keyword string) (err error
 		if err != nil {
 			return
 		}
-		out <- str
+		out <- model.SearchResult{
+			AuctionID: auction,
+			Keyword:   keyword,
+			Content:   str,
+		}
 	})
 
 	return nil
