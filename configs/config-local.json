@@ -17,13 +17,12 @@
     "asyncRequests": 3
   },
   "updater": {
-    "contentPath": "/tmp",
-    "templateFile": "./assets/templates/template.html.tmpl",
-    "batchSize": 5
+    "contentPath": "/tmp"
   },
   "notifier": {
     "contentPath": "/tmp",
     "serverUrl": "http://ebidlocal.cirelli.local",
-    "email": "b6e051d671451ce4c4db+ebidlocal@gmail.com"
+    "email": "b6e051d671451ce4c4db+ebidlocal@gmail.com",
+    "templateFile": ""
   }
 }

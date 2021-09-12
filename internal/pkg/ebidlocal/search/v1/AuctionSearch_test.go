@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/test/fixtures"
 )
 
@@ -69,7 +68,7 @@ func TestSearchAuction(t *testing.T) {
 
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
-			ebid.Client = &fixtures.MockClient{
+			Client = &fixtures.MockClient{
 				PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 					return &http.Response{
 						Body:       ioutil.NopCloser(strings.NewReader(test.Body)),
@@ -112,7 +111,7 @@ func Skip_TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 					<td align="center" class="yourmaximum"></td>
 				</tr>
 			`
-	ebid.Client = &fixtures.MockClient{
+	Client = &fixtures.MockClient{
 		PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`
@@ -199,7 +198,7 @@ func TestSearchAuctionRemovesDataThatChanges(t *testing.T) {
 					<td align="center" class="yourmaximum"><span id="1435_yourmax"><input type="text" name="m1435" size="8" placeholder="your max"/> <br/><i><a href="https://auction.ebidlocal.comjavascript:subbnpw()">submit bid</a></i></span><br/><span id="1435_endtime"></span><br/><span id="1435_status"></span></td>
 				</tr>
 			`
-	ebid.Client = &fixtures.MockClient{
+	Client = &fixtures.MockClient{
 		PostFormFunc: func(url string, data url.Values) (resp *http.Response, err error) {
 			return &http.Response{
 				Body: ioutil.NopCloser(strings.NewReader(`

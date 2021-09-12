@@ -1,4 +1,4 @@
-package watchlist
+package model
 
 import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/id"

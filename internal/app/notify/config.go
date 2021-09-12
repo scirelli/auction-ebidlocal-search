@@ -60,6 +60,10 @@ func DefaultConfig(config *Config) *Config {
 		config.WatchlistDir = filepath.Join(config.ContentPath, "web", "watchlists")
 		logger.Infof("Defaulting watchlist dir to '%s'\n", config.WatchlistDir)
 	}
+	if config.TemplateFile == "" {
+		config.TemplateFile = filepath.Join(config.ContentPath, "assets", "templates", "email.html.tmpl")
+		logger.Infof("Defaulting template dir to '%s'\n", config.TemplateFile)
+	}
 
 	return config
 }
@@ -72,6 +76,7 @@ type Config struct {
 	ServerUrl    string `json:"serverUrl"`
 	Type         string `json:"type"`
 	WatchlistDir string `json:"watchlistDir"`
+	TemplateFile string `json:"templateFile"`
 
 	Debug    bool         `json:"debug"`
 	LogLevel log.LogLevel `json:"logLevel"`

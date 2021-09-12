@@ -1,0 +1,49 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=us-ascii"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>{{.ServerURL}} - Ebidlocal OnLine Auction Watch Lists</title>
+        <style>
+            td.photo img {
+                width: 350px;
+                height: 350px;
+            }
+            th.item-id, td.item-id {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <a href="{{.WatchlistLink}}">{{.WatchlistName | htmlSafe}}</a>
+        <table id="DataTable" border="0" width="100%" align="center" cellpadding="3" cellspacing="1">
+            <thead>
+                <tr>
+                    <th align="center" class="item-name">Item Name</th>
+                    <th align="center" class="item-id">Item Id</th>
+                    <th align="center" class="photo">Photo</th>
+                    <th align="center" class="description">Description</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {{range $index, $element := .Rows}}
+            <tr>
+                <td class="item-name">
+                    <a href="{{.ItemURL | String | htmlSafe}}">{{.ItemName}}</a>
+                </td>
+                <td class="item-id">
+                    <a href="{{.ItemURL | String | htmlSafe}}">{{.Id}}</a>
+                </td>
+                <td class="photo">
+                    <a href="{{.ItemURL | String | htmlSafe}}"><img src="{{index .ImageURLs 0 | String}}"/></a>
+                </td>
+                <td class="description">
+                    {{.Description}}
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </body>
+</html>

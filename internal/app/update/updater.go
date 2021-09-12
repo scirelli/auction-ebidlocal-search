@@ -1,21 +1,15 @@
 package update
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha1"
-	"fmt"
-	"html/template"
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
+	"regexp"
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
-
-	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
@@ -26,24 +20,16 @@ type Updater interface {
 	Update(watchlistPath <-chan string) error
 }
 
-//New constructor for updater app. This app creates new watch lists on disk and has a updater to keep them up-to-date.
-func New(ctx context.Context, watchlistStore store.Storer, auctionSearcher search.AuctionSearcher, config Config) *Update {
-	var logger = log.New("Update", log.DEFAULT_LOG_LEVEL)
+var matchPunctuation = regexp.MustCompile(`[[:punct:]]`)
 
-	t, err := template.New("watchlist_content").Funcs(template.FuncMap{
-		"htmlSafe": func(html string) template.HTML {
-			return template.HTML(html)
-		},
-	}).ParseFiles(config.TemplateFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
+//New constructor for updater app. The updater subscribes to watch list file channel. When it receives a watch list it then updates the data.
+func New(ctx context.Context, watchlistStore store.Storer, searchExtractor SearchExtractor, config Config) *Update {
+	var logger = log.New("Update", log.DEFAULT_LOG_LEVEL)
 
 	return &Update{
 		config:          config,
 		logger:          logger,
-		template:        t,
-		auctionSearcher: auctionSearcher,
+		searchExtractor: searchExtractor,
 		ctx:             ctx,
 		store:           watchlistStore,
 		changePublsr:    publish.NewStringChange(),
@@ -54,8 +40,7 @@ func New(ctx context.Context, watchlistStore store.Storer, auctionSearcher searc
 type Update struct {
 	config          Config
 	logger          log.Logger
-	template        *template.Template
-	auctionSearcher search.AuctionSearcher
+	searchExtractor SearchExtractor
 	store           store.Storer
 	ctx             context.Context
 	changePublsr    publish.StringPublisher
@@ -86,65 +71,66 @@ func (u *Update) Update(watchlistFilePaths <-chan string) error {
 //updateWatchlistContent determines if a watch list's content has changed, updates that content then publishes that there was a change.
 func (u *Update) updateWatchlistContent(id string) error {
 	var err error
-	var newContent bytes.Buffer
+	var watchlist model.Watchlist
+	var watchlistContent = model.WatchlistContent{
+		WatchlistID: id,
+		Timestamp:   time.Now(),
+	}
 
-	u.logger.Infof("Updater.updateWatchlistContent: Checking watch list id: '%s'", id)
-	if err = u.searchAuctionForWatchlist(id, &newContent); err != nil {
-		u.logger.Errorf("Updater.updateWatchlistContent: '%s'", err)
+	if watchlist, err = u.store.LoadWatchlist(u.ctx, id); err != nil {
+		u.logger.Error(err)
 		return err
 	}
+
+	u.logger.Debugf("Updater.updateWatchlistContent: Checking watch list id: '%s'", id)
+	for item := range u.searchAuctionForWatchlist(watchlist) {
+		watchlistContent.AuctionItems = append(watchlistContent.AuctionItems, item)
+	}
+
 	contentID := u.getSavedContentId(id)
-	newContentID := getContentId(bytes.NewReader(newContent.Bytes()))
-	if contentID == newContentID {
+	if contentID == watchlistContent.ID() {
 		u.logger.Debugf("Updater.updateWatchlistContent: No changes for id('%s')", contentID)
 		return nil
 	}
 
 	u.logger.Debugf("Updater.updateWatchlistContent: There was a change to watch list: '%s'", id)
-	u.saveContent(id, bytes.NewReader(newContent.Bytes()))
-	u.saveContentHash(id, newContentID)
+	if _, err = u.store.SaveWatchlistContent(u.ctx, &watchlistContent); err != nil {
+		u.logger.Debugf("Updater.saveContent: Was not able to save the content for watchlist '%s'", id)
+		return err
+	}
+	if err = u.saveContentHash(id, watchlistContent.ID()); err != nil {
+		u.logger.Debugf("Updater.saveContentHash: Was not able to save the content hash for watchlist '%s'", id)
+		return err
+	}
 	u.logger.Debugf("Updater.updateWatchlistContent: Publishing change for: '%s'", id)
 	u.changePublsr.Publish(id)
 
 	return nil
 }
 
-func (u *Update) searchAuctionForWatchlist(id string, out io.Writer) error {
-	watchlist, err := u.store.LoadWatchlist(u.ctx, id)
-	if err != nil {
-		u.logger.Error(err)
-		return err
-	}
-
-	if err := u.template.Execute(out, struct {
-		Rows          chan string
-		WatchlistLink string
-		WatchlistName string
-		Timestamp     string
-		TimestampEpoc string
-	}{
-		Rows:          u.auctionSearcher.Search(stringiter.SliceStringIterator(watchlist)),
-		WatchlistLink: "__watchlistLink__", //u.config.ServerUrl + "/watchlist/" + id,
-		WatchlistName: "<!--{{watchlistName}}-->",
-		Timestamp:     time.Now().Format(time.UnixDate),
-		TimestampEpoc: fmt.Sprintf("%d", time.Now().Unix()),
-	}); err != nil {
-		return err
-	}
-
-	return nil
+func (u *Update) searchAuctionForWatchlist(watchlist model.Watchlist) <-chan model.AuctionItem {
+	return u.filterModels(watchlist, u.searchExtractor.Extract(u.searchExtractor.Search(stringiter.SliceStringIterator(watchlist))))
 }
 
-func (u *Update) saveContent(watchlistID string, content io.Reader) error {
-	var file *os.File
-	var err error
+//filterModels filters the models to make sure they contain a string from the watch list. This is needed since the new ebidlocal search matches substrings of words.
+func (u *Update) filterModels(watchlist model.Watchlist, in <-chan model.AuctionItem) <-chan model.AuctionItem {
+	var out = make(chan model.AuctionItem)
 
-	if file, err = os.Create(u.watchlistDataFilePathFromID(watchlistID)); err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = io.Copy(file, content)
-	return err
+	go func() {
+		defer close(out)
+		keywordLookup := sliceToDict(toLower(watchlist))
+		for item := range in {
+			for _, f := range toLower(stripPunctuation(strings.Fields(item.String()))) {
+				//u.logger.Debugf("Testing field '%s' in \n'%s'\n", f, item.String())
+				if _, exists := keywordLookup[f]; exists {
+					out <- item
+					break
+				}
+			}
+		}
+	}()
+
+	return out
 }
 
 func (u *Update) saveContentHash(watchlistID string, contentHash string) error {
@@ -183,10 +169,6 @@ func (u *Update) watchlistPathFromID(watchlistID string) string {
 	return filepath.Join(u.config.WatchlistDir, watchlistID)
 }
 
-func (u *Update) watchlistDataFilePathFromID(watchlistID string) string {
-	return filepath.Join(u.config.WatchlistDir, watchlistID, "index.html")
-}
-
 func (u *Update) watchlistHashFilePathFromID(watchlistID string) string {
 	return filepath.Join(u.config.WatchlistDir, watchlistID, "hash")
 }
@@ -196,24 +178,55 @@ func watchlistIDFromPath(watchlistFilePath string) string {
 	return file
 }
 
-func getContentId(content io.Reader) string {
-	ids := buildItemIdSlice(content)
-	if len(ids) == 0 {
-		return ""
+func stripPunctuation(s []string) []string {
+	o := make([]string, len(s))
+	for i, w := range s {
+		o[i] = string(matchPunctuation.ReplaceAll([]byte(w), []byte("")))
 	}
-
-	sort.Strings(ids)
-	hash := fmt.Sprintf("%x", sha1.Sum([]byte(strings.Join(ids, ""))))
-	return hash
+	return o
 }
 
-func buildItemIdSlice(content io.Reader) []string {
-	doc, err := goquery.NewDocumentFromReader(content)
-	if err != nil {
-		return []string{}
+func toLower(s []string) []string {
+	o := make([]string, len(s))
+	for i, w := range s {
+		o[i] = strings.ToLower(w)
 	}
-
-	return doc.Find("#DataTable tbody tr").Map(func(_ int, s *goquery.Selection) string {
-		return s.AttrOr("id", "")
-	})
+	return o
 }
+
+func sliceToDict(s []string) map[string]struct{} {
+	dict := make(map[string]struct{})
+	for _, w := range s {
+		dict[w] = struct{}{}
+	}
+	return dict
+}
+
+/* Stream models out to file
+
+enc := json.NewEncoder(out)
+if _, err := w.Write([]byte{'['}); err != nil {
+	u.logger.Error(err)
+	return err
+}
+if err := enc.Encode(<-models); err != nil {
+	if _, err := w.Write([]byte{']'}); err != nil {
+		u.logger.Error(err)
+		return err
+	}
+	return err
+}
+for o := range models {
+	if _, err := w.Write([]byte{','}); err != nil {
+		return err
+	}
+	if err := enc.Encode(o); err != nil {
+		if _, err := w.Write([]byte{']'}); err != nil {
+			u.logger.Error(err)
+			return err
+		}
+		return err
+	}
+}
+return nil
+*/

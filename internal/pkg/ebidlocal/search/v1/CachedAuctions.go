@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	ebid "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 )
 
@@ -61,7 +60,7 @@ func requestOpenAuctions(saleEventsURL string) []string {
 }
 
 func scrapeAuctionUrls(saleEventsURL string) (urls []*url.URL) {
-	res, err := ebid.Client.Get(saleEventsURL)
+	res, err := Client.Get(saleEventsURL)
 	if err != nil {
 		log.Println(err)
 		return urls

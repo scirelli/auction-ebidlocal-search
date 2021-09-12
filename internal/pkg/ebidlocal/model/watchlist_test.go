@@ -1,4 +1,4 @@
-package watchlist
+package model
 
 import (
 	"testing"

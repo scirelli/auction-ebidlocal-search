@@ -4,4 +4,5 @@ import "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/stor
 
 type FSStore struct {
 	store.WatchlistStorer
+	store.WatchlistContentStorer
 }

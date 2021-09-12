@@ -7,6 +7,7 @@ import (
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
 	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
+	ebidstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	ebidfsstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 )
@@ -37,9 +38,12 @@ func main() {
 	if *contentPath != "" {
 		appConfig.Server.ContentPath = *contentPath
 	}
-	fsStore := ebidfsstore.NewWatchlistStore(ebidfsstore.StoreConfig{
-		WatchlistDir: appConfig.Server.WatchlistDir,
-	}, logger)
+	fsStore := ebidfsstore.FSStore{
+		ebidfsstore.NewWatchlistStore(ebidfsstore.WatchlistStoreConfig{
+			WatchlistDir: appConfig.Server.WatchlistDir,
+		}, logger),
+		&ebidstore.NopWatchlistContentStore{},
+	}
 
 	server.New(
 		appConfig.Server,

@@ -10,7 +10,7 @@ import (
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/publish"
 )
 
-//New constructor for scanner app. This app creates new watch lists on disk and has a scanner to keep them up-to-date. The scanner publishes watch lists it finds.
+//New constructor for scanner app. The scanner publishes watch lists it finds.
 func New(config Config) *Scanner {
 	changePublsr := publish.NewStringChange()
 	changePublsr.PublishTTL = 10 * 60 * time.Second // The Scanner sets a long publish time because down stream handlers (watch list updater) an take a long time to process a list. Since the app was changed to process one list at a time (due to memory limitations) the publisher should give enough time for ebidlocal requests to finish.
