@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -70,13 +71,14 @@ func (en *EmailNotify) Send() error {
 func (en *EmailNotify) Notify(message NotificationMessage) error {
 	en.Logger.Infof("Message received trying to email... %s", message)
 
-	var wllink string
+	var wllink, emailLink string
 	var err error
 	var content *model.WatchlistContent
 	for wlname, wl := range message.User.Watchlists {
 		for _, wlID := range strings.Split(wl, ",") {
 			var emailBody *bytes.Buffer = &bytes.Buffer{}
 			wllink = fmt.Sprintf("%s/viewwatchlists.html?id=%s#%s", en.config.ServerUrl, url.QueryEscape(message.User.ID), startWithNumbers.ReplaceAllString(cssValidCharacters.ReplaceAllString(wlname+"_"+wlID, ""), ""))
+			emailLink = fmt.Sprintf("%s/api/user/%s/watchlist/%s/email.html", en.config.ServerUrl, message.User.ID, wlID)
 
 			if content, err = en.store.LoadWatchlistContent(context.Background(), wlID); err != nil {
 				en.Logger.Errorf("Error retrieving wl '%s'", err)
@@ -89,6 +91,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 				Rows          []model.AuctionItem
 				WatchlistLink string
 				WatchlistName string
+				EmailLink     string
 				Timestamp     string
 				TimestampEpoc string
 			}{
@@ -96,6 +99,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 				Rows:          content.AuctionItems,
 				WatchlistLink: wllink,
 				WatchlistName: wlname,
+				EmailLink:     emailLink,
 				Timestamp:     time.Now().Format(time.UnixDate),
 				TimestampEpoc: fmt.Sprintf("%d", time.Now().Unix()),
 			}); err != nil {
@@ -109,6 +113,10 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 					f, _ := ioutil.TempFile("/tmp", fmt.Sprintf("doc_%s_", "EmailBody"))
 					f.WriteString(eb)
 					f.Close()
+				}
+
+				if err := os.WriteFile(filepath.Join(en.config.WatchlistDir, wlID, "email.html"), emailBody.Bytes(), 0644); err != nil {
+					en.Logger.Errorf("Failed to save email html '%s'", err)
 				}
 				return email.NewEmail(
 					[]string{message.User.Email},
