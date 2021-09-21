@@ -174,6 +174,7 @@ func (s *AuctionItem) extract(in <-chan model.SearchResult, out chan<- model.Auc
 		doc.Find("body > div.row").Each(func(i int, selection *goquery.Selection) {
 			m := model.AuctionItem{
 				ParentAuctionID: result.AuctionID,
+				Keywords:        []string{result.Keyword},
 			}
 			s.scraper.Scrape(selection, &m)
 
