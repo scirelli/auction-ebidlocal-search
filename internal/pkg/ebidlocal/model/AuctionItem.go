@@ -19,6 +19,7 @@ type AuctionItemAccessor interface {
 	GetNextMinBidAmout() int
 	GetImages() []*url.URL
 	GetItemURL() *url.URL
+	GetKeywords() []string
 }
 
 //AuctionItem currently matches data from Ebidlocal v2 site
@@ -30,6 +31,7 @@ type AuctionItem struct {
 	TotalBids            int        `json:"totalBids,omitempty"`
 	CurrentBidAmount     int        `json:"currentBidAmount,omitempty"`
 	ItemName             string     `json:"itemName,omitempty"`
+	Keywords             []string   `json:"keywords,omitempty"`
 	MinimumNextBidAmount int        `json:"minimumNextBidAmount,omitempty"`
 	BuyNowPrice          int        `json:"buyNowPrice,omitempty"`
 	Quantity             int        `json:"quantity,omitempty"`
@@ -80,6 +82,11 @@ func (a *AuctionItem) GetItemURL() *url.URL {
 	return a.ItemURL
 }
 
+func (a *AuctionItem) GetKeywords() []string {
+	return a.Keywords
+}
+
+//---------------- Sorting -------------------------
 //ByID implements the sort.Sort interface to sort the Models by it's IDer
 type ByID []AuctionItemAccessor
 
@@ -91,4 +98,66 @@ func (s ByID) Swap(i, j int) {
 }
 func (s ByID) Less(i, j int) bool {
 	return s[i].ID() < s[j].ID()
+}
+
+//------------------ Grouping -------------------------
+//GroupByKeyword groups the AuctionItems by keyword, returns a map of kwyword to AuctionItems
+type GroupByKeyword []AuctionItem
+
+func (g GroupByKeyword) Group() map[string][]AuctionItem {
+	var set = make(map[string][]AuctionItem)
+	for _, item := range g {
+		for _, keyword := range item.Keywords {
+			if _, exists := set[keyword]; exists {
+				set[keyword] = append(set[keyword], item)
+			} else {
+				set[keyword] = []AuctionItem{item}
+			}
+		}
+	}
+	return set
+}
+
+//----------------- Filters ---------------------------
+//Filter a function with accepts and AuctionItem and returns true if it should be allowed to pass the filter.
+type Filter func(AuctionItem) bool
+
+//AuctionItemChanFilterer a single method interface which creates a new channel with all elements that pass the test implemented by the provided Filter function. This filter function should close the output channel.
+type AuctionItemChanFilterer interface {
+	Filter(Filter) <-chan AuctionItem
+}
+
+type FilterAuctionItemChan <-chan AuctionItem
+
+func (f FilterAuctionItemChan) Filter(filter Filter) <-chan AuctionItem {
+	var out = make(chan AuctionItem)
+
+	go func() {
+		defer close(out)
+		for item := range f {
+			if filter(item) {
+				out <- item
+			}
+		}
+	}()
+
+	return out
+}
+
+//AuctionItemSliceFilterer a single method interface which creates a new slice with all elements that pass the test implemented by the provided Filter function.
+type AuctionItemSliceFilterer interface {
+	Filter(Filter) []AuctionItem
+}
+
+type FilterAuctionItemSlice []AuctionItem
+
+func (f FilterAuctionItemSlice) Filter(filter Filter) (out []AuctionItem) {
+	out = make([]AuctionItem, 0, len(f)>>1)
+	for _, item := range f {
+		if filter(item) {
+			out = append(out, item)
+		}
+	}
+
+	return
 }

@@ -114,23 +114,15 @@ func (u *Update) searchAuctionForWatchlist(watchlist model.Watchlist) <-chan mod
 
 //filterModels filters the models to make sure they contain a string from the watch list. This is needed since the new ebidlocal search matches substrings of words.
 func (u *Update) filterModels(watchlist model.Watchlist, in <-chan model.AuctionItem) <-chan model.AuctionItem {
-	var out = make(chan model.AuctionItem)
-
-	go func() {
-		defer close(out)
-		keywordLookup := sliceToDict(toLower(watchlist))
-		for item := range in {
-			for _, f := range toLower(stripPunctuation(strings.Fields(item.String()))) {
-				//u.logger.Debugf("Testing field '%s' in \n'%s'\n", f, item.String())
-				if _, exists := keywordLookup[f]; exists {
-					out <- item
-					break
-				}
+	keywordLookup := sliceToDict(toLower(watchlist))
+	return model.FilterAuctionItemChan(in).Filter(func(item model.AuctionItem) bool {
+		for _, f := range toLower(stripPunctuation(strings.Fields(item.String()))) {
+			if _, exists := keywordLookup[f]; exists {
+				return true
 			}
 		}
-	}()
-
-	return out
+		return false
+	})
 }
 
 func (u *Update) saveContentHash(watchlistID string, contentHash string) error {
