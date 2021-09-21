@@ -4,49 +4,80 @@
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <title>{{.ServerURL}} - Ebidlocal OnLine Auction Watch Lists Email</title>
         <style>
-            td.photo img {
-                width: 350px;
-                height: 350px;
+            table {
+                border-spacing: 1em;
+                border-collapse: separate;
             }
-            th.item-id, td.item-id {
+            td.photo img {
+                width: 175px;
+                height: 175px;
+            }
+            td.item-name, th.item-name {
+                white-space: nowrap;
+            }
+            tr.keyword th {
+                text-transform: capitalize;
+            }
+            .hidden {
                 display: none;
+            }
+            sup.info {
+                color: #0000FF;
             }
         </style>
     </head>
 
     <body>
-        <a href="{{.WatchlistLink}}">{{.WatchlistName | htmlSafe}}</a>
-        <table id="DataTable" border="0" width="100%" align="center" cellpadding="3" cellspacing="1">
+        <p class="email-msg">
+            Your watch list can be found here: <a href="{{.WatchlistLink}}">{{.WatchlistName | htmlSafe}}</a>
+        </p>
+        <table id="DataTable" width="100%" align="center" cellpadding="3" cellspacing="1">
             <thead>
                 <tr>
+                    <th align="center" class="keyword">Keyword</th>
                     <th align="center" class="item-name">Item Name</th>
-                    <th align="center" class="item-id">Item Id</th>
+                    <th align="center" class="item-id hidden">Item Id</th>
                     <th align="center" class="photo">Photo</th>
-                    <th align="center" class="description">Description</th>
+                    <th align="center" class="description">Description <sup class="info" title="Descriptions are taken as is from the Ebidlocal site.">i</sup></th>
                 </tr>
             </thead>
 
             <tbody>
-            {{range $index, $element := .Rows}}
-            <tr>
-                <td class="item-name">
-                    <a href="{{.ItemURL | String | htmlSafe}}">{{.ItemName}}</a>
-                </td>
-                <td class="item-id">
-                    <a href="{{.ItemURL | String | htmlSafe}}">{{.Id}}</a>
-                </td>
-                <td class="photo">
-                    <a href="{{.ItemURL | String | htmlSafe}}"><img src="{{index .ImageURLs 0 | String}}"/></a>
-                </td>
-                <td class="description">
-                    {{.Description}}
-                </td>
-            </tr>
+            {{range $key, $list := .Rows}}
+                    <tr class="keyword">
+                        <th rowspan="{{add (len $list) 1}}">{{$key}}</th>
+                    </tr>
+                    {{range $index, $element := $list}}
+                    <tr class="items">
+                        <td class="item-name">
+                            <a href="{{.ItemURL | String | htmlSafe}}" target="_blank">{{.ItemName}}</a>
+                        </td>
+                        <td class="item-id hidden">
+                            <a href="{{.ItemURL | String | htmlSafe}}" target="_blank">{{.Id}}</a>
+                        </td>
+                        <td class="photo">
+                            <a href="{{.ItemURL | String | htmlSafe}}" target="_blank"><img src="{{index .ImageURLs 0 | String}}"/></a>
+                        </td>
+                        <td class="description">
+                            {{.Description}}
+                        </td>
+                    </tr>
+                    {{end}}
+                    <tr class="divider"><td colspan="5"><hr/></td></tr>
             {{end}}
             </tbody>
         </table>
-        <p>
-        Not able to view this email? Visit <a href="{{.EmailLink}}" title="HTML page verision of this email">here</a> to view the html version of this email.
+        <p class="email-msg">
+        Not able to view this email? Visit <a href="{{.EmailLink}}#email-view" target="_blank" title="HTML page verision of this email">here</a> to view the html version.
         </p>
+
+        <script>
+            //Emails do not (should not run script)
+            if(window.location.hash != '#email-view') {
+                Array.prototype.forEach.call(document.body.querySelectorAll('.email-msg'), elem => {
+                    elem.classList.add('hidden');
+                });
+            }
+        </script>
     </body>
 </html>

@@ -45,6 +45,9 @@ func NewEmailNotify(config Config, store store.WatchlistContentStorer, messageCh
 		"String": func(item fmt.Stringer) string {
 			return item.String()
 		},
+		"add": func(a int, b int) int {
+			return a + b
+		},
 	}).ParseFiles(config.TemplateFile)
 	if err != nil {
 		logger.Fatal(err)
@@ -88,7 +91,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 
 			if err := en.template.Execute(emailBody, struct {
 				ServerURL     string
-				Rows          []model.AuctionItem
+				Rows          map[string][]model.AuctionItem
 				WatchlistLink string
 				WatchlistName string
 				EmailLink     string
@@ -96,7 +99,7 @@ func (en *EmailNotify) Notify(message NotificationMessage) error {
 				TimestampEpoc string
 			}{
 				ServerURL:     en.config.ServerUrl,
-				Rows:          content.AuctionItems,
+				Rows:          model.AuctionItemGroupByKeyword(content.AuctionItems).Group(),
 				WatchlistLink: wllink,
 				WatchlistName: wlname,
 				EmailLink:     emailLink,

@@ -101,10 +101,10 @@ func (s ByID) Less(i, j int) bool {
 }
 
 //------------------ Grouping -------------------------
-//GroupByKeyword groups the AuctionItems by keyword, returns a map of kwyword to AuctionItems
-type GroupByKeyword []AuctionItem
+//AuctionItemGroupByKeyword groups the AuctionItems by keyword, returns a map of kwyword to AuctionItems
+type AuctionItemGroupByKeyword []AuctionItem
 
-func (g GroupByKeyword) Group() map[string][]AuctionItem {
+func (g AuctionItemGroupByKeyword) Group() map[string][]AuctionItem {
 	var set = make(map[string][]AuctionItem)
 	for _, item := range g {
 		for _, keyword := range item.Keywords {
