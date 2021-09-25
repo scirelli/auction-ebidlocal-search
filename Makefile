@@ -105,6 +105,17 @@ requestNewWatchlist4: /tmp/user.id ## Create a new watch list. Used for testing.
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
+.PHONY: requestNewWatchlist5
+requestNewWatchlist5: /tmp/user.id ## Create a new watch list. Used for testing.
+	@EBID_USER="$$(cat /tmp/user.id)" ; \
+	curl --request POST \
+		--include \
+		--location \
+		--header "Content-Type: application/json" \
+		--data '{"name":"example-music", "list":["sheet", "violin", "cello", "music", "piano"]}' \
+		localhost:8282/user/$$EBID_USER/watchlist
+	@echo ''
+
 .PHONY: test
 test: ## Run all tests
 	@go test ./...
