@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/app/extract"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server"
 	storefs "github.com/scirelli/auction-ebidlocal-search/internal/app/server/store/fs"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal"
 	ebidstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	ebidfsstore "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store/fs"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
@@ -52,5 +54,11 @@ func main() {
 			storefs.NewWatchlistStore(fsStore, logger),
 		},
 		log.New("Server", appConfig.Server.LogLevel),
+		server.EbidlocalExtractor{
+			extract.NewAuctionItem(&extract.Config{
+				LogLevel: log.DEFAULT_LOG_LEVEL,
+			}),
+			ebidlocal.AuctionSearchFactory("v2", nil),
+		},
 	).Run()
 }

@@ -120,22 +120,29 @@ func (g AuctionItemGroupByKeyword) Group() map[string][]AuctionItem {
 
 //----------------- Filters ---------------------------
 //Filter a function with accepts and AuctionItem and returns true if it should be allowed to pass the filter.
-type Filter func(AuctionItem) bool
+type Filterer interface {
+	Filter(AuctionItem) bool
+}
+type FilterFunc func(AuctionItem) bool
+
+func (f FilterFunc) Filter(item AuctionItem) bool {
+	return f(item)
+}
 
 //AuctionItemChanFilterer a single method interface which creates a new channel with all elements that pass the test implemented by the provided Filter function. This filter function should close the output channel.
 type AuctionItemChanFilterer interface {
-	Filter(Filter) <-chan AuctionItem
+	Filter(Filterer) <-chan AuctionItem
 }
 
 type FilterAuctionItemChan <-chan AuctionItem
 
-func (f FilterAuctionItemChan) Filter(filter Filter) <-chan AuctionItem {
+func (f FilterAuctionItemChan) Filter(filter Filterer) <-chan AuctionItem {
 	var out = make(chan AuctionItem)
 
 	go func() {
 		defer close(out)
 		for item := range f {
-			if filter(item) {
+			if filter.Filter(item) {
 				out <- item
 			}
 		}
@@ -146,15 +153,15 @@ func (f FilterAuctionItemChan) Filter(filter Filter) <-chan AuctionItem {
 
 //AuctionItemSliceFilterer a single method interface which creates a new slice with all elements that pass the test implemented by the provided Filter function.
 type AuctionItemSliceFilterer interface {
-	Filter(Filter) []AuctionItem
+	Filter(Filterer) []AuctionItem
 }
 
 type FilterAuctionItemSlice []AuctionItem
 
-func (f FilterAuctionItemSlice) Filter(filter Filter) (out []AuctionItem) {
+func (f FilterAuctionItemSlice) Filter(filter Filterer) (out []AuctionItem) {
 	out = make([]AuctionItem, 0, len(f)>>1)
 	for _, item := range f {
-		if filter(item) {
+		if filter.Filter(item) {
 			out = append(out, item)
 		}
 	}

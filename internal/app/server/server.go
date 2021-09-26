@@ -21,17 +21,21 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
-	. "github.com/scirelli/auction-ebidlocal-search/internal/app/server/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/app/server/store"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/filter"
+	ebidmodel "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/log"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/notify/email"
+	stringutils "github.com/scirelli/auction-ebidlocal-search/internal/pkg/stringUtils"
 )
 
-func New(config Config, store store.Storer, logger log.Logger) *Server {
+func New(config Config, store store.Storer, logger log.Logger, searchExtractor SearchExtractor) *Server {
 	var server = Server{
-		config: config,
-		logger: logger,
-		store:  store,
+		config:          config,
+		logger:          logger,
+		store:           store,
+		searchExtractor: searchExtractor,
 	}
 
 	t, err := template.New("verification.template.html.tmpl").Funcs(template.FuncMap{
@@ -54,11 +58,12 @@ func New(config Config, store store.Storer, logger log.Logger) *Server {
 }
 
 type Server struct {
-	logger   log.Logger
-	addr     string
-	store    store.Storer
-	config   Config
-	template *template.Template
+	logger          log.Logger
+	addr            string
+	store           store.Storer
+	config          Config
+	template        *template.Template
+	searchExtractor SearchExtractor
 }
 
 func (s *Server) Run() {
@@ -71,6 +76,7 @@ func (s *Server) registerHTTPHandlers() {
 
 	s.registerUserRoutes(r.PathPrefix("/user").Subrouter())
 	s.registerWatchlistRoutes(r.PathPrefix("/watchlist").Subrouter())
+	s.registerSearchRoutes(r.PathPrefix("/search").Subrouter())
 
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir(filepath.Join(s.config.ContentPath, "/web/static"))))
 
@@ -140,9 +146,29 @@ func (s *Server) registerWatchlistRoutes(router *mux.Router) *mux.Router {
 	return router
 }
 
+func (s *Server) registerSearchRoutes(router *mux.Router) *mux.Router {
+	router.Path("/").Methods("GET").Queries("q", "{q}").Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//query := r.FormValue("q")
+		var q []string
+		var exists bool
+		var results []ebidmodel.AuctionItem
+		query := r.URL.Query()
+		if q, exists = query["q"]; !exists || (exists && len(stringutils.FilterEmpty(q)) == 0) {
+			respondError(w, http.StatusBadRequest, "Missing query value")
+			return
+		}
+		for result := range ebidmodel.FilterAuctionItemChan(s.searchExtractor.Extract(s.searchExtractor.Search(stringiter.SliceStringIterator(q)))).Filter(ebidmodel.FilterFunc(filter.ByKeyword)) {
+			s.logger.Info(result)
+			results = append(results, result)
+		}
+		respondJSON(w, http.StatusOK, results)
+	})).Name("Quick-Search")
+	return router
+}
+
 func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var user User
+	var user model.User
 	var err error
 	var nonce uuid.UUID
 
@@ -156,7 +182,7 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmp := NewUser(user.Name)
+	tmp := model.NewUser(user.Name)
 	tmp.Email = user.Email
 	user = tmp
 
@@ -182,7 +208,7 @@ func (s *Server) createUserHandlerFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	var wl Watchlist
+	var wl model.Watchlist
 
 	userID := mux.Vars(r)["userID"]
 
@@ -216,7 +242,7 @@ func (s *Server) createUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.R
 }
 
 func (s *Server) deleteUserWatchlistHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	var wl Watchlist
+	var wl model.Watchlist
 
 	userID := mux.Vars(r)["userID"]
 
@@ -361,7 +387,7 @@ func (s *Server) isVerifiedUserHandlerFunc(w http.ResponseWriter, r *http.Reques
 
 //sendUserVerification sends a verification email to the user. First it checks the last verified timestamp to prevent spamming of verification emails. If interval has elapsed it will send a
 // new varify url to the user.
-func (s *Server) sendUserVerification(u *User) (uuid.UUID, error) {
+func (s *Server) sendUserVerification(u *model.User) (uuid.UUID, error) {
 	var emailBody bytes.Buffer
 	nonce := uuid.New()
 
@@ -379,7 +405,7 @@ func (s *Server) sendUserVerification(u *User) (uuid.UUID, error) {
 	return nonce, nil
 }
 
-func (s *Server) createVerificationEmail(u *User, nonce uuid.UUID, out io.Writer) error {
+func (s *Server) createVerificationEmail(u *model.User, nonce uuid.UUID, out io.Writer) error {
 	var base, pathUrl *url.URL
 	var err error
 
@@ -406,7 +432,7 @@ func (s *Server) createVerificationEmail(u *User, nonce uuid.UUID, out io.Writer
 }
 
 //verifyUser verifies the user, if user is verified a nil error is returned, otherwise an error is returned.
-func (s *Server) verifyUser(user *User, nonce uuid.UUID) error {
+func (s *Server) verifyUser(user *model.User, nonce uuid.UUID) error {
 	if user.Verified {
 		return nil
 	}
@@ -422,14 +448,14 @@ func (s *Server) verifyUser(user *User, nonce uuid.UUID) error {
 	return nil
 }
 
-func (s *Server) isVerifiedUser(user *User) error {
+func (s *Server) isVerifiedUser(user *model.User) error {
 	if !user.Verified {
 		return &VerifyNotVerifiedError{}
 	}
 	return nil
 }
 
-func (s *Server) createUserSpace(u *User) (string, error) {
+func (s *Server) createUserSpace(u *model.User) (string, error) {
 	var userDir string = filepath.Join(s.config.UserDir, u.ID)
 
 	if err := os.MkdirAll(userDir, 0775); err != nil {
@@ -454,7 +480,7 @@ func (s *Server) createUserSpace(u *User) (string, error) {
 }
 
 //addUserWatchlist add a watch list to a user's group of watch lists.
-func (s *Server) addUserWatchlist(ctx context.Context, userID string, list *Watchlist) (listID string, err error) {
+func (s *Server) addUserWatchlist(ctx context.Context, userID string, list *model.Watchlist) (listID string, err error) {
 	user, err := s.store.LoadUser(ctx, userID)
 	if err != nil {
 		return "", err
@@ -474,7 +500,7 @@ func (s *Server) addUserWatchlist(ctx context.Context, userID string, list *Watc
 }
 
 //deleteUserWatchlist delete a watch list from a user's group of watch lists.
-func (s *Server) deleteUserWatchlist(ctx context.Context, userID string, list *Watchlist) error {
+func (s *Server) deleteUserWatchlist(ctx context.Context, userID string, list *model.Watchlist) error {
 	user, err := s.store.LoadUser(ctx, userID)
 	if err != nil {
 		return err

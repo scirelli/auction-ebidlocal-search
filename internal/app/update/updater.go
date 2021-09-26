@@ -5,10 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
+	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/filter"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/model"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/store"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
@@ -19,8 +18,6 @@ import (
 type Updater interface {
 	Update(watchlistPath <-chan string) error
 }
-
-var matchPunctuation = regexp.MustCompile(`[[:punct:]]`)
 
 //New constructor for updater app. The updater subscribes to watch list file channel. When it receives a watch list it then updates the data.
 func New(ctx context.Context, watchlistStore store.Storer, searchExtractor SearchExtractor, config Config) *Update {
@@ -109,20 +106,7 @@ func (u *Update) updateWatchlistContent(id string) error {
 }
 
 func (u *Update) searchAuctionForWatchlist(watchlist model.Watchlist) <-chan model.AuctionItem {
-	return u.filterModels(u.searchExtractor.Extract(u.searchExtractor.Search(stringiter.SliceStringIterator(watchlist))))
-}
-
-//filterModels filters the models to make sure they contain a string from the watch list. This is needed since the new ebidlocal search matches substrings of words.
-func (u *Update) filterModels(in <-chan model.AuctionItem) <-chan model.AuctionItem {
-	return model.FilterAuctionItemChan(in).Filter(func(item model.AuctionItem) bool {
-		keywordLookup := sliceToDict(toLower(item.Keywords))
-		for _, f := range toLower(stripPunctuation(strings.Fields(item.String()))) {
-			if _, exists := keywordLookup[f]; exists {
-				return true
-			}
-		}
-		return false
-	})
+	return model.FilterAuctionItemChan(u.searchExtractor.Extract(u.searchExtractor.Search(stringiter.SliceStringIterator(watchlist)))).Filter(model.FilterFunc(filter.ByKeyword))
 }
 
 func (u *Update) saveContentHash(watchlistID string, contentHash string) error {
@@ -168,30 +152,6 @@ func (u *Update) watchlistHashFilePathFromID(watchlistID string) string {
 func watchlistIDFromPath(watchlistFilePath string) string {
 	_, file := filepath.Split(watchlistFilePath)
 	return file
-}
-
-func stripPunctuation(s []string) []string {
-	o := make([]string, len(s))
-	for i, w := range s {
-		o[i] = string(matchPunctuation.ReplaceAll([]byte(w), []byte("")))
-	}
-	return o
-}
-
-func toLower(s []string) []string {
-	o := make([]string, len(s))
-	for i, w := range s {
-		o[i] = strings.ToLower(w)
-	}
-	return o
-}
-
-func sliceToDict(s []string) map[string]struct{} {
-	dict := make(map[string]struct{})
-	for _, w := range s {
-		dict[w] = struct{}{}
-	}
-	return dict
 }
 
 /* Stream models out to file
