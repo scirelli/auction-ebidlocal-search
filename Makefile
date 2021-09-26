@@ -79,7 +79,7 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones", "drill", "drillpress", "press"]}' \
+		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones", "drill", "drillpress", "press", "tent"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 
@@ -90,7 +90,7 @@ requestNewWatchlist3: /tmp/user.id ## Create a new watch list. Used for testing.
 		--include \
 		--location \
 		--header "Content-Type: application/json" \
-		--data '{"name":"example2-other", "list":["chess", "monopoly", "candyland"]}' \
+		--data '{"name":"example-board-games", "list":["chess", "monopoly", "candyland"]}' \
 		localhost:8282/user/$$EBID_USER/watchlist
 	@echo ''
 

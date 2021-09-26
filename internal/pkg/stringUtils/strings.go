@@ -7,16 +7,22 @@ import (
 
 var matchPunctuation = regexp.MustCompile(`[[:punct:]]`)
 
-func FilterEmpty(s []string) []string {
-	return s
+func FilterEmpty(s []string) (out []string) {
+	out = make([]string, 0, len(s))
+	for _, item := range s {
+		if item != "" {
+			out = append(out, item)
+		}
+	}
+	return
 }
 
-func SliceToDict(s []string) map[string]struct{} {
-	dict := make(map[string]struct{})
+func SliceToDict(s []string) (dict map[string]struct{}) {
+	dict = make(map[string]struct{})
 	for _, w := range s {
 		dict[w] = struct{}{}
 	}
-	return dict
+	return
 }
 
 func ToLower(s []string) []string {
