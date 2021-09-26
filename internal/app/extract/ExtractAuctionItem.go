@@ -26,6 +26,7 @@ type AuctionItem struct {
 func NewAuctionItem(config *Config) *AuctionItem {
 	var logger = log.New("AuctionItemExtractor", config.LogLevel)
 	removeImageSize := regexp.MustCompile(`(-[0-9]+x[0-9]+)(?P<extent>\..+$)`)
+	extraWhiteSpace := regexp.MustCompile(`\s{2,}`)
 
 	return &AuctionItem{
 		config: config,
@@ -77,7 +78,7 @@ func NewAuctionItem(config *Config) *AuctionItem {
 				}),
 				//Extra Description
 				libscrape.ScrapeFunc(func(s *goquery.Selection, m *model.AuctionItem) *model.AuctionItem {
-					m.ExtendedDescription = strings.TrimSpace(s.Find("div.tooltip-demos").First().Text())
+					m.ExtendedDescription = strings.TrimSpace(extraWhiteSpace.ReplaceAllString(s.Find("div.tooltip-demos").First().Text(), " "))
 					return m
 				}),
 			},
