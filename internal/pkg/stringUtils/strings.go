@@ -8,6 +8,7 @@ import (
 var matchPunctuation = regexp.MustCompile(`[[:punct:]]`)
 
 func FilterEmpty(s []string) []string {
+	return s
 }
 
 func SliceToDict(s []string) map[string]struct{} {
