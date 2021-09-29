@@ -108,7 +108,7 @@ func NewAuctionItem(config *Config) *AuctionItem {
 				for fieldName, inputName := range inputNamesTypeString {
 					scrapers = append(scrapers, func(fieldName string, inputName string) libscrape.ScrapeFunc {
 						return libscrape.ScrapeFunc(func(s *goquery.Selection, m *model.AuctionItem) *model.AuctionItem {
-							var selector string = fmt.Sprintf("div.AuctionItem-listInfo input[name='%s']", inputName)
+							var selector string = fmt.Sprintf("input[name='%s']", inputName)
 							if v, exists := s.Find(selector).Attr("value"); exists {
 								reflect.ValueOf(m).Elem().FieldByName(fieldName).SetString(strings.TrimSpace(v))
 							} else {
@@ -124,7 +124,7 @@ func NewAuctionItem(config *Config) *AuctionItem {
 				for fieldName, inputName := range inputNamesTypeInt {
 					scrapers = append(scrapers, func(fieldName string, inputName string) libscrape.ScrapeFunc {
 						return libscrape.ScrapeFunc(func(s *goquery.Selection, m *model.AuctionItem) *model.AuctionItem {
-							var selector string = fmt.Sprintf("div.AuctionItem-listInfo input[name='%s']", inputName)
+							var selector string = fmt.Sprintf("input[name='%s']", inputName)
 							if v, exists := s.Find(selector).Attr("value"); exists {
 								i, _ := strconv.ParseInt(v, 10, 64)
 								reflect.ValueOf(m).Elem().FieldByName(fieldName).SetInt(i)
@@ -140,6 +140,16 @@ func NewAuctionItem(config *Config) *AuctionItem {
 
 				return scrapers
 			}(),
+		).AddAll(
+			[]libscrape.HTMLScraper{
+				libscrape.ScrapeFunc(func(s *goquery.Selection, m *model.AuctionItem) *model.AuctionItem {
+					if m.ItemName != "" {
+						return m
+					}
+					m.ItemName = strings.TrimSpace(extraWhiteSpace.ReplaceAllString(s.Find(".Itemlist-Lottitle").First().Text(), " "))
+					return m
+				}),
+			},
 		),
 	}
 }
