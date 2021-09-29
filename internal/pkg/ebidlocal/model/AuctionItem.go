@@ -26,7 +26,7 @@ type AuctionItemAccessor interface {
 type AuctionItem struct {
 	Id                   string     `json:"id"`
 	ParentAuctionID      string     `json:"parentAuctionId"`
-	ImageURLs            []*url.URL `json:imageUrls,omitempty"`
+	ImageURLs            []*url.URL `json:"imageUrls,omitempty"`
 	ItemURL              *url.URL   `json:"itemUrl,omitempty"`
 	TotalBids            int        `json:"totalBids,omitempty"`
 	CurrentBidAmount     int        `json:"currentBidAmount,omitempty"`
