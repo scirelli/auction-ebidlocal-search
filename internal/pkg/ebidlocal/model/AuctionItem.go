@@ -29,7 +29,7 @@ type AuctionItem struct {
 	ImageURLs            []*url.URL `json:"imageUrls,omitempty"`
 	ItemURL              *url.URL   `json:"itemUrl,omitempty"`
 	TotalBids            int        `json:"totalBids,omitempty"`
-	CurrentBidAmount     int        `json:"currentBidAmount,omitempty"`
+	CurrentBidAmount     float64    `json:"currentBidAmount,omitempty"`
 	ItemName             string     `json:"itemName,omitempty"`
 	Keywords             []string   `json:"keywords,omitempty"`
 	MinimumNextBidAmount int        `json:"minimumNextBidAmount,omitempty"`
@@ -42,7 +42,7 @@ type AuctionItem struct {
 	EndDate              time.Time  `json:"endDate,omitempty"`
 	StatusCode           string     `json:"statusCode,omitempty"`
 	ReservePrice         int        `json:"reservePrice,omitempty"`
-	BidAmount            int        `json:"bidAmount,omitempty"`
+	BidAmount            float64    `json:"bidAmount,omitempty"`
 	OriginalName         string     `json:"originalName,omitempty"`
 }
 
@@ -66,7 +66,7 @@ func (a *AuctionItem) GetDescription() string {
 	return a.Description
 }
 
-func (a *AuctionItem) GetBidAmount() int {
+func (a *AuctionItem) GetBidAmount() float64 {
 	return a.BidAmount
 }
 

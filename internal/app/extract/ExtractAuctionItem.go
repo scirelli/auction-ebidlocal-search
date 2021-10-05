@@ -96,14 +96,16 @@ func NewAuctionItem(config *Config) *AuctionItem {
 				}
 				var inputNamesTypeInt = map[string]string{
 					"TotalBids":            "TotalBids",
-					"CurrentBidAmount":     "CurrentBidAmount",
 					"MinimumNextBidAmount": "MinimumNextBidAmount",
 					"BuyNowPrice":          "BuyNowPrice",
 					"Quantity":             "Quantity",
 					"ReservePrice":         "ReservePrice",
-					"BidAmount":            "BidAmount",
 				}
-				var scrapers = make([]libscrape.HTMLScraper, 0, len(inputNamesTypeString)+len(inputNamesTypeInt)+2)
+				var inputNamesTypeFloat = map[string]string{
+					"CurrentBidAmount": "CurrentBidAmount",
+					"BidAmount":        "BidAmount",
+				}
+				var scrapers = make([]libscrape.HTMLScraper, 0, len(inputNamesTypeString)+len(inputNamesTypeInt)+len(inputNamesTypeFloat)+2)
 
 				for fieldName, inputName := range inputNamesTypeString {
 					scrapers = append(scrapers, func(fieldName string, inputName string) libscrape.ScrapeFunc {
@@ -128,6 +130,23 @@ func NewAuctionItem(config *Config) *AuctionItem {
 							if v, exists := s.Find(selector).Attr("value"); exists {
 								i, _ := strconv.ParseInt(v, 10, 64)
 								reflect.ValueOf(m).Elem().FieldByName(fieldName).SetInt(i)
+							} else {
+								logger.Infof("'%s' does not exist", selector)
+							}
+
+							return m
+						})
+
+					}(fieldName, inputName))
+				}
+
+				for fieldName, inputName := range inputNamesTypeFloat {
+					scrapers = append(scrapers, func(fieldName string, inputName string) libscrape.ScrapeFunc {
+						return libscrape.ScrapeFunc(func(s *goquery.Selection, m *model.AuctionItem) *model.AuctionItem {
+							var selector string = fmt.Sprintf("input[name='%s']", inputName)
+							if v, exists := s.Find(selector).Attr("value"); exists {
+								i, _ := strconv.ParseFloat(v, 64)
+								reflect.ValueOf(m).Elem().FieldByName(fieldName).SetFloat(i)
 							} else {
 								logger.Infof("'%s' does not exist", selector)
 							}
