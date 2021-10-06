@@ -39,6 +39,7 @@ type WatchlistStoreConfig struct {
 }
 
 func (wl *WatchlistStore) SaveWatchlist(ctx context.Context, list model.Watchlist) (ID string, err error) {
+	list.Normalize()
 	if err = wl.addWatchlist(list); err != nil {
 		return "", err
 	}
@@ -46,7 +47,9 @@ func (wl *WatchlistStore) SaveWatchlist(ctx context.Context, list model.Watchlis
 }
 
 func (wl *WatchlistStore) LoadWatchlist(ctx context.Context, watchlistID string) (model.Watchlist, error) {
-	return wl.loadWatchlist(filepath.Join(wl.Config.WatchlistDir, watchlistID, wl.Config.DataFileName))
+	list, err := wl.loadWatchlist(filepath.Join(wl.Config.WatchlistDir, watchlistID, wl.Config.DataFileName))
+	list.Normalize()
+	return list, err
 }
 
 func (wl *WatchlistStore) DeleteWatchlist(ctx context.Context, watchlistID string) error {
