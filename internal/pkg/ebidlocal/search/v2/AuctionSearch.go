@@ -26,6 +26,7 @@ const (
 	requestDelay                 = 1
 	maxRetries                   = 3
 	maxConcurrentRequests        = 5
+	requestTimeout               = 60 * time.Second
 )
 
 var Client ebidhttp.HTTPClient
@@ -81,7 +82,7 @@ func SearchAuction(out chan<- model.SearchResult, auction string, keyword string
 	params.Add("pageSize", "10000")
 	base.RawQuery = params.Encode()
 	logger.Debugf("Making request to... URL '%s'; auction '%s'; keyword '%s'", base.String(), auction, keyword)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
 	if req, err = http.NewRequestWithContext(ctx, "GET", base.String(), nil); err != nil {
 		return err
