@@ -27,11 +27,19 @@ server: ./build/server ## Run just the webserver
 	./server --config-path=$(shell pwd)/build/configs/config.json
 
 ./build/.running: ./build/configs/config.json
-	make server &
-	make scanner &
-	touch ./build/.running
+	@echo "Starting up..."
+	@make server & echo "$$!" >> ./build/.running
+	@make scanner & echo "$$!" >> ./build/.running
 
 run: ./build/.running  ## Run the server and scanner
+	@echo "Running"
+
+stop: ./build/.running
+	@while IFS="" read -r p || [ -n "$$p" ]; do \
+		printf 'Stopping process: %s\n' "$$p"; \
+		kill -15 "$$p"; \
+	done < <(cat ./build/.running)
+	@rm ./build/.running
 
 copy_configs: configs
 	@mkdir -p ./build/configs
