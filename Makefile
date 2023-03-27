@@ -1,6 +1,12 @@
 SHELL:=/usr/bin/env bash
 .EXPORT_ALL_VARIABLES:
 
+# EMAIL_PASSWORD=   # required in environment to send passwords
+
+ifeq (, $(shell which jq))
+	$(error "No jq in $(PATH), consider doing apt-get install jq")
+endif
+
 all: test
 
 build: clean copy_configs copy_web copy_assets ./build/server ./build/scanner ## Build the project
