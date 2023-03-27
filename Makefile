@@ -26,15 +26,29 @@ server: ./build/server ## Run just the webserver
 	@cd ./build && \
 	./server --config-path=$(shell pwd)/build/configs/config.json
 
-./build/.running: ./build/configs/config.json
-	@echo "Starting up..."
+run-bg-server: ./build/configs/config.json  ## Strat the server in the background
+	@echo "Starting Server."
 	@make server & echo "$$!" >> ./build/.running
+
+run-bg-scanner: ./build/configs/config.json  ## Start the scanner in the background
+	@echo "Starting Scanner."
 	@make scanner & echo "$$!" >> ./build/.running
 
-run: ./build/.running  ## Run the server and scanner
+./build/.running:
+	@make run-bg-server
+	@make run-bg-scanner
+	@sleep 1
+
+run-bg: ./build/.running  ## Run the server and scanner in the background
 	@echo "Running"
 
-stop: ./build/.running
+.PHONY: run-docker
+run-docker: run-bg-scanner server  ## Used in docker cmd
+
+.PHONY: start
+start: run-bg	## Alias fro run-bg
+
+stop-bg: ./build/.running  ## Stop the scanner and/or server that was started by run-bg
 	@while IFS="" read -r p || [ -n "$$p" ]; do \
 		printf 'Stopping process: %s\n' "$$p"; \
 		kill -15 "$$p"; \
