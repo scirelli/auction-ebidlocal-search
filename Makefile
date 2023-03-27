@@ -26,12 +26,12 @@ server: ./build/server ## Run just the webserver
 	@cd ./build && \
 	./server --config-path=$(shell pwd)/build/configs/config.json
 
-./build/.running:
+./build/.running: ./build/configs/config.json
 	make server &
 	make scanner &
 	touch ./build/.running
 
-run: ./build/.running ## Run the server and scanner
+run: ./build/.running  ## Run the server and scanner
 
 copy_configs: configs
 	@mkdir -p ./build/configs
