@@ -2,8 +2,7 @@ SHELL:=/usr/bin/env bash
 .EXPORT_ALL_VARIABLES:
 
 configPath ?= $(shell pwd)/build/configs/config.json
-
-# EMAIL_PASSWORD=   # required in environment to send passwords
+EMAIL_PASSWORD ?= ''  # required in environment to send passwords
 
 all: test
 
@@ -80,7 +79,7 @@ docker-tty:  ## Log into a running image
 
 .PHONY: docker-run
 docker-run:  ## Log into a running image
-	docker run --detach --publish 8282:80 --restart on-failure:5 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist
+	docker run --detach --publish 8282:80 --restart on-failure:5 -v ebidUserData:/data --env EMAIL_PASSWORD=$(EMAIL_PASSWORD) --name ebidlocal-server ebidlocal-watchlist
 
 .PHONY: docker-create-volume
 docker-create-volume:  ## Create the data volume for this docker
