@@ -3,6 +3,7 @@ SHELL:=/usr/bin/env bash
 
 configPath ?= $(shell pwd)/build/configs/config.json
 EMAIL_PASSWORD ?= ''  # required in environment to send passwords
+PORT ?= 8282
 
 all: test
 
@@ -75,11 +76,11 @@ docker-build:	## Build the docker image
 
 .PHONY: docker-tty
 docker-tty:  ## Log into a running image
-	docker run --interactive --tty --rm --publish 8282:80 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist /bin/bash
+	docker run --interactive --tty --rm --publish $(PORT):80 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist /bin/bash
 
 .PHONY: docker-run
 docker-run:  ## Log into a running image
-	docker run --detach --publish 8282:80 --restart on-failure:5 -v ebidUserData:/data --env EMAIL_PASSWORD=$(EMAIL_PASSWORD) --name ebidlocal-server ebidlocal-watchlist
+	docker run --detach --publish $(PORT):80 --restart on-failure:5 -v ebidUserData:/data --env EMAIL_PASSWORD=$(EMAIL_PASSWORD) --name ebidlocal-server ebidlocal-watchlist
 
 .PHONY: docker-create-volume
 docker-create-volume:  ## Create the data volume for this docker
@@ -104,7 +105,7 @@ requestNewUser: ## Create a new user, for testing
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name": "Steve C.", "email": "scirelli+ebidlocal@gmail.com"}' \
-		localhost:8282/user | jq -r '.id' | tee /tmp/user.id
+		localhost:$(PORT)/user | jq -r '.id' | tee /tmp/user.id
 
 .PHONY: requestNewWatchlist
 requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
@@ -114,7 +115,7 @@ requestNewWatchlist: /tmp/user.id ## Create a new watch list. Used for testing.
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example-retro", "list":["nintendo", "sega", "turbografx", "playstation", "ps4", "ps3", "famicom", "macintosh", "xbox", "tv", "dreamcast", "psp", "vita", "commodore", "turboexpress", "turbo", "amiga", "tandy"]}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: requestDeleteWatchlist
@@ -125,7 +126,7 @@ requestDeleteWatchlist: /tmp/user.id ## Create a new watch list. Used for testin
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example"}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: requestNewWatchlist2
@@ -136,7 +137,7 @@ requestNewWatchlist2: /tmp/user.id ## Create a new watch list. Used for testing.
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example2-household", "list":["recliner", "pool", "chainsaw", "saw", "mower", "lawnmower", "scuba", "tarp", "bed", "stair", "stepper", "climber", "headphones", "drill", "drillpress", "press", "tent"]}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: requestNewWatchlist3
@@ -147,7 +148,7 @@ requestNewWatchlist3: /tmp/user.id ## Create a new watch list. Used for testing.
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example-board-games", "list":["chess", "monopoly", "candyland"]}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: requestNewWatchlist4
@@ -158,7 +159,7 @@ requestNewWatchlist4: /tmp/user.id ## Create a new watch list. Used for testing.
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example-holiday", "list":["christmas", "xmas", "x-mas", "halloween", "fall", "decorations"]}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: requestNewWatchlist5
@@ -169,7 +170,7 @@ requestNewWatchlist5: /tmp/user.id ## Create a new watch list. Used for testing.
 		--location \
 		--header "Content-Type: application/json" \
 		--data '{"name":"example-music", "list":["sheet", "violin", "cello", "music", "piano"]}' \
-		localhost:8282/user/$$EBID_USER/watchlist
+		localhost:$(PORT)/user/$$EBID_USER/watchlist
 	@echo ''
 
 .PHONY: test
@@ -207,7 +208,7 @@ verifyUser: /tmp/user.id /tmp/user.nonce
 	NONCE="$$(cat /tmp/user.nonce)" ; \
 	curl --request GET \
 		--header "Content-type: application/json" \
-		http://localhost:8282/user/$$EBID_USER/verify/$$NONCE
+		http://localhost:$(PORT)/user/$$EBID_USER/verify/$$NONCE
 
 /tmp/user.nonce: /tmp/user.id
 	@EBID_USER="$$(cat /tmp/user.id)" ; \
@@ -218,7 +219,7 @@ sendVerification: /tmp/user.id ## Send verification email.
 	EBID_USER="$$(cat /tmp/user.id)" ; \
 	curl --request PUT \
 		--header "Content-type: application/json" \
-		http://localhost:8282/user/$$EBID_USER/verify/send
+		http://localhost:$(PORT)/user/$$EBID_USER/verify/send
 
 .PHONY: help
 help: ## Show help message
