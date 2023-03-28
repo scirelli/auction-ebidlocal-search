@@ -1,13 +1,15 @@
 SHELL:=/usr/bin/env bash
 .EXPORT_ALL_VARIABLES:
 
+configPath ?= $(shell pwd)/build/configs/config.json
+
 # EMAIL_PASSWORD=   # required in environment to send passwords
+
+all: test
 
 ifeq (, $(shell which jq))
 	$(error "No jq in $(PATH), consider doing apt-get install jq")
 endif
-
-all: test
 
 build: clean copy_configs copy_web copy_assets ./build/server ./build/scanner ## Build the project
 	@echo 'Done'
@@ -20,17 +22,17 @@ build: clean copy_configs copy_web copy_assets ./build/server ./build/scanner ##
 
 scanner: ./build/scanner ## Run just the scanner
 	@cd ./build && \
-	./scanner --config-path=$(shell pwd)/build/configs/config.json
+	./scanner --config-path=$(configPath)
 
 server: ./build/server ## Run just the webserver
 	@cd ./build && \
-	./server --config-path=$(shell pwd)/build/configs/config.json
+	./server --config-path=$(configPath)
 
-run-bg-server: ./build/configs/config.json  ## Strat the server in the background
+run-bg-server: $(configPath)  ## Strat the server in the background
 	@echo "Starting Server."
 	@make server & echo "$$!" >> ./build/.running
 
-run-bg-scanner: ./build/configs/config.json  ## Start the scanner in the background
+run-bg-scanner: $(configPath)  ## Start the scanner in the background
 	@echo "Starting Scanner."
 	@make scanner & echo "$$!" >> ./build/.running
 
@@ -66,6 +68,33 @@ copy_web: web
 
 copy_assets: assets
 	@cp -r ./assets ./build/
+
+
+.PHONY: docker-build
+docker-build:	## Build the docker image
+	docker build --tag ebidlocal-watchlist --file ./.docker/Dockerfile .
+
+.PHONY: docker-tty
+docker-tty:  ## Log into a running image
+	docker run --interactive --tty --rm --publish 8282:80 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist /bin/bash
+
+.PHONY: docker-run
+docker-run:  ## Log into a running image
+	docker run --detach --publish 8282:80 --restart on-failure:5 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist
+
+.PHONY: docker-create-volume
+docker-create-volume:  ## Create the data volume for this docker
+	mkdir -p data_dir/web/user data_dir/web/watchlists && ./.docker/docker-volume-cp data_dir/. ebidUserData:.
+
+.PHONY: docker-rm-volume
+docker-rm-volume:  ## Delete the docker volume
+	docker volume rm ebidUserData
+
+.PHONY: docker-cp-all-out-of-volume
+docker-cp-all-out-of-volume:  ## Copy all data out of the volume to a dir.
+	mkdir -p /tmp/volumeData
+	./.docker/docker-volume-cp ebidUserData:. /tmp/volumeData
+
 
 /tmp/user.id:
 	@$(MAKE) requestNewUser

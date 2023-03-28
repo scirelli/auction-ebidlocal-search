@@ -5,3 +5,5 @@
 !web
 !go.mod
 !go.sum
+!Makefile
+!configs

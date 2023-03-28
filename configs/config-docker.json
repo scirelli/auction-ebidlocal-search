@@ -1,0 +1,28 @@
+{
+  "debug": true,
+  "logLevel": "Debug",
+  "server": {
+    "port": 80,
+    "address": "0.0.0.0",
+    "contentPath": "/data",
+    "verificationTemplateFile": "/usr/src/app/build/assets/templates/verification.template.html.tmpl",
+    "VerificationWindowMinutes": 60,
+    "serverUrl": "http://ebidlocal.cirelli.local:80",
+    "uiUrl": "http://ebidlocal.cirelli.local"
+  },
+  "scanner": {
+    "contentPath": "/data",
+    "dataFileName": "data.json",
+    "scanIntervalSeconds": 350,
+    "asyncRequests": 3
+  },
+  "updater": {
+    "contentPath": "/data"
+  },
+  "notifier": {
+    "contentPath": "/data",
+    "serverUrl": "http://ebidlocal.cirelli.local",
+    "email": "b6e051d671451ce4c4db+ebidlocal@gmail.com",
+    "templateFile": "/usr/src/app/build/assets/templates/email.html.tmpl"
+  }
+}
