@@ -1,0 +1,7 @@
+*
+!assets
+!cmd
+!internal
+!web
+!go.mod
+!go.sum

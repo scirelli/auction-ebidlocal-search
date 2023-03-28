@@ -11,5 +11,5 @@ RUN make build
 
 CMD ["make run-docker"]
 
-#$ docker build -t my-golang-app .
-#$ docker run -it --rm --name my-running-app my-golang-app
+#$ docker build -t ebidlocal-watchlist ..
+#$ docker run -it --rm --publish 8282:8282 --name ebidlocal-server ebidlocal-watchlist
