@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	AuctionSite           string = "https://staples.prod4.maxanet.auction"
+	AuctionSite           string = "https://auction.ebidlocal.com"
 	SearchURL             string = AuctionSite + "/Public/Auction/GetAuctionItems"
 	requestDelay                 = 1
 	maxRetries                   = 3
@@ -87,9 +87,10 @@ func SearchAuction(out chan<- model.SearchResult, auction string, keyword string
 	if req, err = http.NewRequestWithContext(ctx, "GET", base.String(), nil); err != nil {
 		return err
 	}
-	req.Header.Add("Host", "staples.prod4.maxanet.auction")
+	req.Header.Add("Host", "auction.ebidlocal.com")
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
 	req.Header.Add("Pragma", "no-cache")
+    req.Header.Add("X-Requested-With", "XMLHttpRequest")
 	if res, err = Client.Do(req); err != nil {
 		return err
 	}

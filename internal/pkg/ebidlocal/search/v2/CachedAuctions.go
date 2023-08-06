@@ -4,6 +4,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+    "net/http"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
@@ -21,7 +22,7 @@ List all current auctions: https://staples.prod4.maxanet.auction/Public/Auction/
 
 const (
 	openAuctionsScheme        = "https"
-	openAuctionsDomain string = "staples.prod4.maxanet.auction"
+	openAuctionsDomain string = "auction.ebidlocal.com"
 	//openAuctionsPath url that lists open auctions
 	openAuctionsPath       string        = "/Public/Auction/GetAuctions"
 	openAuctionsQuery      string        = "?filter=Current&pageSize=1000"
@@ -80,7 +81,14 @@ func requestOpenAuctions(openAuctionsURL string) []string {
 func scrapeAuctionLabelIds(openAuctionsURL string) []string {
 	var ids []string
 
-	res, err := Client.Get(openAuctionsURL)
+    req, err := http.NewRequest("GET", openAuctionsURL, nil)
+	if err != nil {
+		clogger.Error(err)
+		return ids
+	}
+    req.Header.Add("X-Requested-With", "XMLHttpRequest")
+    req.Header.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+	res, err := Client.Do(req)
 	if err != nil {
 		clogger.Error(err)
 		return ids

@@ -79,7 +79,7 @@ docker-tty:  ## Log into a running image
 	docker run --interactive --tty --rm --publish $(PORT):80 -v ebidUserData:/data --name ebidlocal-server ebidlocal-watchlist /bin/bash
 
 .PHONY: docker-run
-docker-run:  ## Log into a running image
+docker-run:  ## Run the docker
 	docker run --detach --publish $(PORT):80 --restart on-failure:5 -v ebidUserData:/data --env EMAIL_PASSWORD=$(EMAIL_PASSWORD) --name ebidlocal-server ebidlocal-watchlist
 
 .PHONY: docker-create-volume
@@ -220,6 +220,13 @@ sendVerification: /tmp/user.id ## Send verification email.
 	curl --request PUT \
 		--header "Content-type: application/json" \
 		http://localhost:$(PORT)/user/$$EBID_USER/verify/send
+
+.PHONY: testCurrentAuctionList
+testCurrentAuctionList: ## Check to see if results come back for current auction page
+	curl 'https://auction.ebidlocal.com/Public/Auction/GetAuctions?filter=Current&pageSize=1000' \
+	  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36' \
+	  -H 'X-Requested-With: XMLHttpRequest'
+
 
 .PHONY: help
 help: ## Show help message
