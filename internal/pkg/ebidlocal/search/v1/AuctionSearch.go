@@ -32,7 +32,7 @@ var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
 var logger log.Logger
 
 func init() {
-	logger = log.New("Ebidlocal.Search", log.DEFAULT_LOG_LEVEL)
+	logger = log.New("Ebidlocal.Search.v1", log.DEFAULT_LOG_LEVEL)
 	Client = http.DefaultClient
 }
 

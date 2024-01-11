@@ -8,13 +8,15 @@
     "verificationTemplateFile": "/usr/src/app/build/assets/templates/verification.template.html.tmpl",
     "VerificationWindowMinutes": 60,
     "serverUrl": "http://ebidlocal.cirelli.local:80",
-    "uiUrl": "http://ebidlocal.cirelli.local"
+    "uiUrl": "http://ebidlocal.cirelli.local",
+    "searchVersion": "v3"
   },
   "scanner": {
     "contentPath": "/data",
     "dataFileName": "data.json",
     "scanIntervalSeconds": 350,
-    "asyncRequests": 3
+    "asyncRequests": 3,
+    "searchVersion": "v3"
   },
   "updater": {
     "contentPath": "/data"

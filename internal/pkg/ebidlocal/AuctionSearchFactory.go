@@ -5,6 +5,7 @@ import (
 	search "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search"
 	v1 "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search/v1"
 	v2 "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search/v2"
+	v3 "github.com/scirelli/auction-ebidlocal-search/internal/pkg/ebidlocal/search/v3"
 	"github.com/scirelli/auction-ebidlocal-search/internal/pkg/iter/stringiter"
 )
 
@@ -22,6 +23,11 @@ var searchers map[string]SearcherFactoryFunc = map[string]SearcherFactoryFunc{
 	},
 	"": func(config interface{}) search.AuctionSearcher {
 		return search.AuctionSearchFunc(NullSearch)
+	},
+	"v3": func(config interface{}) search.AuctionSearcher {
+		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan model.SearchResult {
+			return v3.SearchAuctions(keywordIter, v3.NewAuctionsCache())
+		})
 	},
 	"v2": func(config interface{}) search.AuctionSearcher {
 		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan model.SearchResult {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"sync"
 	"time"
+    "strings"
 
 	"github.com/PuerkitoBio/goquery"
 
@@ -34,7 +35,7 @@ var throttle = funcUtils.ThrottleFuncFactory(maxConcurrentRequests)
 var logger log.Logger
 
 func init() {
-	logger = log.New("Ebidlocal.Search.v2", log.DEFAULT_LOG_LEVEL)
+	logger = log.New("Ebidlocal.Search.v3", log.DEFAULT_LOG_LEVEL)
 	Client = http.DefaultClient
 }
 
@@ -54,7 +55,7 @@ func SearchAuctions(keywordIter stringiter.Iterable, openAuctions stringiter.Ite
 					var auction string = v[0].(string)
 					var keyword string = v[1].(string)
 					if err := SearchAuction(results, auction, keyword); err != nil {
-						logger.Error(err)
+                        logger.Errorf("Searching '%s' for '%s' failed with '%s'", auction, keyword, err)
 					}
 				}, auction, keyword)
 			}
@@ -80,13 +81,15 @@ func SearchAuction(out chan<- model.SearchResult, auction string, keyword string
 	params.Add("SearchFilter", keyword)
 	params.Add("viewType", "3")
 	params.Add("pageSize", "10000")
-	base.RawQuery = params.Encode()
+
 	logger.Debugf("Making request to... URL '%s'; auction '%s'; keyword '%s'", base.String(), auction, keyword)
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
-	if req, err = http.NewRequestWithContext(ctx, "GET", base.String(), nil); err != nil {
+	if req, err = http.NewRequestWithContext(ctx, "POST", base.String(), strings.NewReader(params.Encode())); err != nil {
+        logger.Errorf("Making request to... URL '%s'; auction '%s'; keyword '%s'", base.String(), auction, keyword, err)
 		return err
 	}
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	req.Header.Add("Host", "auction.ebidlocal.com")
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
 	req.Header.Add("Pragma", "no-cache")
