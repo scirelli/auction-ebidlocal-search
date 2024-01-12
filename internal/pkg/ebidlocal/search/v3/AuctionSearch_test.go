@@ -272,13 +272,3 @@ func TestSearchAuction(t *testing.T) {
 		})
 	}
 }
-
-func Skip_TestIntegrationSearchAuction(t *testing.T) {
-	Client = http.DefaultClient
-	resultsChan := SearchAuctions(stringiter.SliceStringIterator([]string{"car"}), NewAuctionsCache())
-
-	for result := range resultsChan {
-		t.Log(result)
-	}
-	//t.Fail()
-}

@@ -26,7 +26,7 @@ var searchers map[string]SearcherFactoryFunc = map[string]SearcherFactoryFunc{
 	},
 	"v3": func(config interface{}) search.AuctionSearcher {
 		return search.AuctionSearchFunc(func(keywordIter stringiter.Iterable) chan model.SearchResult {
-			return v3.SearchAuctions(keywordIter, v3.NewAuctionsCache())
+			return v3.SearchAuctions(keywordIter, v2.NewAuctionsCache())
 		})
 	},
 	"v2": func(config interface{}) search.AuctionSearcher {

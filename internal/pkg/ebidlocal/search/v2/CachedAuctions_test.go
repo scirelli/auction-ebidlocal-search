@@ -62,7 +62,7 @@ func TestAuctionCache(t *testing.T) {
 		"GET gets a 404 response": CachedAuctionTestCase{
 			Body:       ioutil.NopCloser(strings.NewReader("hello world")),
 			StatusCode: 404,
-			Error:      nil,
+			Error:      errors.New("some error 2"),
 			Expected:   []string{},
 		},
 	}
@@ -80,6 +80,13 @@ func TestAuctionCache(t *testing.T) {
 						Request:    &http.Request{},
 					}, test.Error
 				},
+                DoFunc: func(req *http.Request) (*http.Response, error) {
+					return &http.Response{
+						Body:       test.Body,
+						StatusCode: test.StatusCode,
+						Request:    &http.Request{},
+					}, test.Error
+                },
 			}
 			cache := AuctionsCache{
 				refreshInterval: 0 * time.Minute,

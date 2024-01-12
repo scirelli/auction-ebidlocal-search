@@ -224,7 +224,7 @@ func Test_AuctionItem(t *testing.T) {
 	for description, test := range tests {
 		t.Run(description, func(t *testing.T) {
 			results := make([]model.AuctionItem, 0, len(test.Expected))
-			extractor := New(&Config{})
+			extractor := NewAuctionItem(&Config{})
 			in := make(chan model.SearchResult, 1)
 			in <- model.SearchResult{
 				Content: test.Doc,
@@ -258,7 +258,7 @@ func Test_AuctionItem(t *testing.T) {
 }
 
 func Skip_Test_Integration_AuctionItem(t *testing.T) {
-	extractor := New(&Config{})
+	extractor := NewAuctionItem(&Config{})
 	retrievedItems := false
 	for item := range extractor.Extract(ebidlocal.AuctionSearchFactory("v2", nil).Search(stringiter.SliceStringIterator([]string{"car"}))) {
 		retrievedItems = true
