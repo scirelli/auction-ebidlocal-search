@@ -73,6 +73,10 @@ func Defaults(config *Config) *Config {
 		config.UiUrl = "http://localhost"
 		logger.Infof("Defaulting UiUrl to '%s'\n", config.UiUrl)
 	}
+	if config.SearchVersion == "" {
+		config.SearchVersion = "v1"
+		logger.Infof("Defaulting SearchVersion to '%s'\n", config.SearchVersion)
+	}
 
 	return config
 }
@@ -90,6 +94,8 @@ type Config struct {
 	VerificationWindowMinutes time.Duration `json:"verificationWindowMinutes"`
 	ServerUrl                 string        `json:"serverUrl"`
 	UiUrl                     string        `json:"uiUrl"`
+
+    SearchVersion string `json:"searchVersion"`
 
 	Debug    bool         `json:"debug"`
 	LogLevel log.LogLevel `json:"logLevel"`

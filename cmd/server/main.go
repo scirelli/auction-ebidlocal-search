@@ -58,7 +58,7 @@ func main() {
 			extract.NewAuctionItem(&extract.Config{
 				LogLevel: log.DEFAULT_LOG_LEVEL,
 			}),
-			ebidlocal.AuctionSearchFactory("v2", nil),
+			ebidlocal.AuctionSearchFactory(appConfig.Server.SearchVersion, nil),
 		},
 	).Run()
 }

@@ -48,6 +48,10 @@ func Defaults(config *Config) *Config {
 		config.ScanInterval = 10
 		logger.Infof("Defaulting scan interval to '%d'\n", config.ScanInterval)
 	}
+	if config.SearchVersion == "" {
+		config.SearchVersion = "v1"
+		logger.Infof("Defaulting SearchVersion to '%s'\n", config.SearchVersion)
+	}
 
 	return config
 }
@@ -59,6 +63,7 @@ type Config struct {
 	DataFileName string `json:"dataFileName"`
 	WatchlistDir string `json:"watchlistDir"`
 	ScanInterval int64  `json:"scanIntervalSeconds"`
+    SearchVersion string `json:"searchVersion"`
 
 	Debug    bool         `json:"debug"`
 	LogLevel log.LogLevel `json:"logLevel"`
